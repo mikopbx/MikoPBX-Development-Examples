@@ -59,21 +59,34 @@ cd WebInterface/ModuleExampleForm
 cd AMI/ModuleExampleAmi
 ```
 
-### 3. Copy to MikoPBX
+### 3. Create ZIP Archive
+
+Create a ZIP archive from the module folder. **Important**: `module.json` must be in the root of the archive.
 
 ```bash
-# Development (symlink)
-ln -s $(pwd) /storage/usbdisk1/mikopbx/custom_modules/
+# Example: Create ZIP for ModuleExampleRestAPIv3
+cd REST-API/ModuleExampleRestAPIv3
+zip -r ModuleExampleRestAPIv3.zip . -x "*.git*" "*.DS_Store"
+```
 
-# Production (copy)
-cp -r ModuleExample* /storage/usbdisk1/mikopbx/custom_modules/
+**Archive structure**:
+```
+ModuleExampleRestAPIv3.zip
+├── module.json          ← Must be in root!
+├── Lib/
+├── Models/
+├── Messages/
+└── ...
 ```
 
 ### 4. Install via Web UI
 
-1. Navigate to **System → Modules**
-2. Find your module
-3. Click **Install** and **Enable**
+1. Navigate to **Modules Marketplace**
+2. Click **Upload new module**
+3. Select your ZIP file (e.g., `ModuleExampleRestAPIv3.zip`)
+4. Click **Turn it On**
+
+**Note**: Modules must be installed as ZIP archives via the web interface to be properly registered in the system.
 
 ## 📖 Documentation by Topic
 

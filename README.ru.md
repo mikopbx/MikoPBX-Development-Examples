@@ -59,21 +59,34 @@ cd WebInterface/ModuleExampleForm
 cd AMI/ModuleExampleAmi
 ```
 
-### 3. Скопировать в MikoPBX
+### 3. Создать ZIP архив
+
+Создайте ZIP архив из папки модуля. **Важно**: `module.json` должен быть в корне архива.
 
 ```bash
-# Разработка (символическая ссылка)
-ln -s $(pwd) /storage/usbdisk1/mikopbx/custom_modules/
+# Пример: Создание ZIP для ModuleExampleRestAPIv3
+cd REST-API/ModuleExampleRestAPIv3
+zip -r ModuleExampleRestAPIv3.zip . -x "*.git*" "*.DS_Store"
+```
 
-# Продакшн (копирование)
-cp -r ModuleExample* /storage/usbdisk1/mikopbx/custom_modules/
+**Структура архива**:
+```
+ModuleExampleRestAPIv3.zip
+├── module.json          ← Должен быть в корне!
+├── Lib/
+├── Models/
+├── Messages/
+└── ...
 ```
 
 ### 4. Установить через веб-интерфейс
 
-1. Перейдите в **Система → Модули**
-2. Найдите ваш модуль
-3. Нажмите **Установить** и **Включить**
+1. Перейдите в **Modules Marketplace**
+2. Нажмите **Upload new module**
+3. Выберите ваш ZIP файл (например, `ModuleExampleRestAPIv3.zip`)
+4. Нажмите **Turn it On**
+
+**Примечание**: Модули должны устанавливаться как ZIP архивы через веб-интерфейс для правильной регистрации в системе.
 
 ## 📖 Документация по темам
 
