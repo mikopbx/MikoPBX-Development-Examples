@@ -1,0 +1,30 @@
+MikoPBX Module Example - REST API v2
+=====================================
+
+This is a demonstration file for testing file download functionality.
+
+PATTERN 2 (Direct Download):
+- File downloaded directly by controller
+- Fast and simple
+- No worker overhead
+- Best for small static files
+
+PATTERN 1+2 (Worker-based Download):
+- File generated/processed by backend worker
+- Supports async operations
+- Non-blocking PHP-FPM
+- Best for large files or file generation
+
+Test Endpoints:
+1. Direct Download:
+   GET /pbxcore/api/module-example-rest-api-v2/File/downloadDirect?filename=example.txt
+
+2. Worker-based Download:
+   GET /pbxcore/api/module-example-rest-api-v2/File/downloadWorker?filename=example.txt
+
+3. Static File Info (JSON):
+   GET /pbxcore/api/module-example-rest-api-v2/File/static?path=example.txt
+
+---
+Generated: 2025-11-17
+Module: ModuleExampleRestAPIv2

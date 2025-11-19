@@ -1,0 +1,50 @@
+<svg width="512" height="512" viewBox="0 0 512 512"
+     xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="0" y="0" width="512" height="512" fill="#0b1020"/>
+
+  <!-- Inner card -->
+  <rect x="48" y="48" width="416" height="416" rx="64" ry="64"
+        fill="#151d33" stroke="#ffcc00" stroke-width="4"/>
+
+  <!-- Title: MikoPBX -->
+  <text x="50%" y="120" text-anchor="middle"
+        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-size="46" fill="#ffffff">
+    MikoPBX
+  </text>
+
+  <!-- Subtitle: REST API DEMO -->
+  <text x="50%" y="160" text-anchor="middle"
+        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-size="26" fill="#9fb3ff">
+    REST API DEMO
+  </text>
+
+  <!-- REST "network" line -->
+  <line x1="140" y1="276" x2="372" y2="276"
+        stroke="#00c896" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Center node -->
+  <circle cx="256" cy="276" r="20" fill="#ffcc00"/>
+  <!-- Left node -->
+  <circle cx="140" cy="276" r="14" fill="#00c896"/>
+  <!-- Right node -->
+  <circle cx="372" cy="276" r="14" fill="#00c896"/>
+
+  <!-- Left brace { -->
+  <g stroke="#ffcc00" stroke-width="12" stroke-linecap="round" fill="none">
+    <line x1="176" y1="186" x2="206" y2="186"/>
+    <line x1="176" y1="366" x2="206" y2="366"/>
+    <line x1="176" y1="186" x2="176" y2="251"/>
+    <line x1="176" y1="301" x2="176" y2="366"/>
+  </g>
+
+  <!-- Right brace } -->
+  <g stroke="#ffcc00" stroke-width="12" stroke-linecap="round" fill="none">
+    <line x1="306" y1="186" x2="336" y2="186"/>
+    <line x1="306" y1="366" x2="336" y2="366"/>
+    <line x1="336" y1="186" x2="336" y2="251"/>
+    <line x1="336" y1="301" x2="336" y2="366"/>
+  </g>
+</svg>
