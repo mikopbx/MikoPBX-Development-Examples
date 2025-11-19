@@ -1,0 +1,115 @@
+name: Build Module ZIPs
+
+on:
+  push:
+    branches: [ master ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+jobs:
+  build-zips:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for changelog generation
+
+      - name: Build module ZIPs
+        run: |
+          #!/bin/bash
+          set -e
+
+          echo "=== Finding modules with module.json ==="
+
+          # Find all module.json files
+          find . -name "module.json" -not -path "*/.git/*" -not -path "*/node_modules/*" | while read module_json; do
+            module_dir=$(dirname "$module_json")
+            module_name=$(basename "$module_dir")
+
+            echo "📦 Building ZIP for: $module_name"
+
+            cd "$module_dir"
+
+            # Create ZIP with exclusions (README.md inside module is kept!)
+            zip -r "../${module_name}.zip" . \
+              -x "*.git*" \
+              -x "*.DS_Store" \
+              -x "*node_modules/*" \
+              -x "*.gitignore" \
+              -x "*test*.php" \
+              -x "*Test*.php"
+
+            cd - > /dev/null
+          done
+
+          # Collect all ZIPs
+          mkdir -p artifacts
+          find . -maxdepth 3 -name "*.zip" -not -path "./artifacts/*" -exec mv {} artifacts/ \;
+
+          echo "=== Built ZIPs ==="
+          ls -lh artifacts/
+
+      - name: Upload artifacts (on push)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-zips-${{ github.run_number }}
+          path: artifacts/*.zip
+          retention-days: 90
+
+      - name: Generate changelog
+        if: github.event_name == 'release'
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "changelog=Initial release with all module examples" >> $GITHUB_OUTPUT
+          else
+            # Generate changelog between tags
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.zip
+          body: |
+            ## 📦 Available Module Examples
+
+            Download ready-to-install ZIP files:
+
+            ### REST API Modules
+            - **ModuleExampleRestAPIv1.zip** - Pattern 1: Simple Callback
+            - **ModuleExampleRestAPIv2.zip** - Pattern 2: Custom Controllers
+            - **ModuleExampleRestAPIv3.zip** - Pattern 3: Modern 2025 ⭐ Recommended
+
+            ### Other Modules
+            - **ModuleExampleAmi.zip** - AMI Integration Example
+            - **ModuleExampleForm.zip** - Web Interface Form Example
+
+            ## 📋 Changelog
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## 📖 Installation
+            1. Download desired module ZIP file
+            2. Navigate to **Modules Marketplace** in MikoPBX
+            3. Click **Upload new module**
+            4. Select ZIP file
+            5. Click **Turn it On**
+
+            ## 📚 Documentation
+
+            - [English README](https://github.com/mikopbx/MikoPBX-Development-Examples/blob/master/README.md)
+            - [Russian README](https://github.com/mikopbx/MikoPBX-Development-Examples/blob/master/README.ru.md)
+            - [Development Docs](https://github.com/mikopbx/DevelopementDocs)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
