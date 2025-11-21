@@ -16,3 +16,79 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* AMI Events Log - Base Styles */
+#ami-events-log {
+    font-family: monospace;
+    font-size: 11px;
+    background-color: #272822;
+    color: #f8f8f2;
+    min-height: 500px;
+    max-height: 70vh; /* WHY: Use viewport height for responsive sizing */
+    overflow-y: auto;
+    padding: 10px;
+    margin: 0;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: pre-wrap; /* WHY: Preserve formatting and whitespace */
+    word-wrap: break-word; /* WHY: Break long lines */
+}
+
+#ami-events-log .ami-event-block {
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+/* AMI Events Log Syntax Highlighting - Monokai Theme */
+#ami-events-log .ami-timestamp {
+    color: #75715e; /* Gray for timestamp */
+}
+
+#ami-events-log .ami-event-name {
+    color: #66d9ef; /* Cyan for event name */
+    font-weight: bold;
+}
+
+#ami-events-log .ami-key {
+    color: #a6e22e; /* Green for keys */
+}
+
+#ami-events-log .ami-value {
+    color: #e6db74; /* Yellow for values */
+}
+
+#ami-events-log .ami-separator {
+    color: #f92672; /* Pink for separators */
+}
+
+/* Fullscreen mode for events log */
+.fullscreen-mode {
+    position: fixed !important;
+    top: 40px !important; /* WHY: Account for MikoPBX top menu bar */
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: calc(100vh - 60px) !important; /* WHY: Full viewport height minus top menu */
+    z-index: 999 !important; /* WHY: Below top menu (1000+) but above content */
+    background: #272822 !important;
+    padding: 10px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.fullscreen-mode pre {
+    width: 100% !important;
+    height: calc(100% - 20px) !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    border: none !important;
+    box-sizing: border-box !important;
+}
+
+.fullscreen-mode #ami-events-log-wrapper > div {
+    position: fixed !important; /* WHY: Fixed positioning to stay visible */
+    top: 50px !important; /* WHY: Below top menu */
+    right: 15px !important;
+    z-index: 1000 !important;
+}

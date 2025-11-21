@@ -1,7 +1,7 @@
 <?php
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,79 +17,64 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace Modules\ModuleExampleAmi\Lib;
 
-
 use MikoPBX\Core\System\Processes;
-use MikoPBX\Core\Workers\Cron\WorkerSafeScriptsCore;
 use MikoPBX\Modules\PbxExtensionBase;
 use MikoPBX\Modules\PbxExtensionUtils;
 use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
 
+/**
+ * Main module class for AMI Example
+ *
+ * Handles module lifecycle operations:
+ * - Health checks
+ * - Worker management
+ */
 class ExampleAmiMain extends PbxExtensionBase
 {
     /**
-     * Process something received over AsteriskAMI
+     * Perform module health check
      *
-     * @param array $parameters
-     */
-    public function processAmiMessage(array $parameters): void
-    {
-        $message = implode(' ', $parameters);
-        $this->logger->writeInfo($message);
-    }
-
-    /**
-     * Process something received over Beanstalk queue
-     *
-     * @param array $parameters
-     */
-    public function processBeanstalkMessage(array $parameters): void
-    {
-        $message = implode(' ', $parameters);
-        $this->logger->writeInfo($message);
-    }
-
-    /**
-     * Check something and answer over RestAPI
-     *
-     * @return PBXApiResult An object containing the result of the API call.
+     * @return PBXApiResult Module status and metadata
      */
     public function checkModuleWorkProperly(): PBXApiResult
     {
         $res = new PBXApiResult();
         $res->processor = __METHOD__;
         $res->success = true;
+        $res->data = [
+            'module' => 'ModuleExampleAmi',
+            'status' => 'operational',
+            'pattern' => 'AMI Events Streaming Example',
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+
         return $res;
     }
 
     /**
      * Start or restart module workers
      *
-     * @param bool $restart
+     * Manages worker lifecycle using processPHPWorker which handles
+     * both restart and start-if-not-running scenarios
+     *
+     * @param bool $restart Whether to restart workers (unused, kept for compatibility)
      */
     public function startAllServices(bool $restart = false): void
     {
         $moduleEnabled = PbxExtensionUtils::isEnabled($this->moduleUniqueId);
-        if ( ! $moduleEnabled) {
+        if (!$moduleEnabled) {
             return;
         }
-        $configClass      = new ExampleAmiConf();
+
+        $configClass = new ExampleAmiConf();
         $workersToRestart = $configClass->getModuleWorkers();
 
-        if ($restart) {
-            foreach ($workersToRestart as $moduleWorker) {
-                Processes::processPHPWorker($moduleWorker['worker']);
-            }
-        } else {
-            $safeScript = new WorkerSafeScriptsCore();
-            foreach ($workersToRestart as $moduleWorker) {
-                if ($moduleWorker['type'] === WorkerSafeScriptsCore::CHECK_BY_AMI) {
-                    $safeScript->checkWorkerAMI($moduleWorker['worker']);
-                } else {
-                    $safeScript->checkWorkerBeanstalk($moduleWorker['worker']);
-                }
-            }
+        foreach ($workersToRestart as $moduleWorker) {
+            Processes::processPHPWorker($moduleWorker['worker']);
         }
     }
 }

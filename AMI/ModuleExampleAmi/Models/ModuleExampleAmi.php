@@ -1,7 +1,7 @@
 <?php
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,23 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace Modules\ModuleExampleAmi\Models;
 
-use MikoPBX\Common\Models\Providers;
 use MikoPBX\Modules\Models\ModulesModelsBase;
-use Phalcon\Mvc\Model\Relation;
 
+/**
+ * Database model for AMI Example Module settings
+ *
+ * Stores automatically generated AMI credentials
+ *
+ * @property int $id
+ * @property string $ami_user
+ * @property string $ami_password
+ */
 class ModuleExampleAmi extends ModulesModelsBase
 {
-
     /**
      * @Primary
      * @Identity
@@ -34,103 +42,25 @@ class ModuleExampleAmi extends ModulesModelsBase
     public $id;
 
     /**
-     * Text field example
+     * AMI username (auto-generated during installation)
      *
      * @Column(type="string", nullable=true)
      */
-    public $text_field;
+    public $ami_user;
 
     /**
-     * TextArea field example
+     * AMI password (auto-generated during installation)
      *
      * @Column(type="string", nullable=true)
      */
-    public $text_area_field;
+    public $ami_password;
 
     /**
-     * Password field example
-     *
-     * @Column(type="string", nullable=true)
+     * Initialize model and set database table
      */
-    public $password_field;
-
-    /**
-     * Integer field example
-     *
-     * @Column(type="integer", default="1", nullable=true)
-     */
-    public $integer_field;
-
-    /**
-     * CheckBox
-     *
-     * @Column(type="integer", default="1", nullable=true)
-     */
-    public $checkbox_field;
-
-    /**
-     * Toggle
-     *
-     * @Column(type="integer", default="1", nullable=true)
-     */
-    public $toggle_field;
-
-    /**
-     * Dropdown menu
-     *
-     * @Column(type="string", nullable=true)
-     */
-    public $dropdown_field;
-
-    /**
-     * Returns dynamic relations between module models and common models
-     * MikoPBX check it in ModelsBase after every call to keep data consistent
-     *
-     * There is example to describe the relation between Providers and ModuleExampleAmi models
-     *
-     * It is important to duplicate the relation alias on message field after Models\ word
-     *
-     * @param $calledModelObject
-     *
-     * @return void
-     */
-    public static function getDynamicRelations(&$calledModelObject): void
-    {
-//        if (is_a($calledModelObject, Providers::class)) {
-//            $calledModelObject->belongsTo(
-//                'id',
-//                ModuleExampleAmi::class,
-//                'dropdown_field',
-//                [
-//                    'alias'      => 'ModuleExampleAmiProvider',
-//                    'foreignKey' => [
-//                        'allowNulls' => 0,
-//                        'message'    => 'Models\ModuleExampleAmiProvider',
-//                        'action'     => Relation::ACTION_RESTRICT
-//
-//                    ],
-//                ]
-//            );
-//        }
-    }
-
     public function initialize(): void
     {
         $this->setSource('m_ModuleExampleAmi');
-        $this->hasOne(
-            'dropdown_field',
-            Providers::class,
-            'id',
-            [
-                'alias'      => 'Providers',
-                'foreignKey' => [
-                    'allowNulls' => true,
-                    'action'     => Relation::NO_ACTION,
-                ],
-            ]
-        );
         parent::initialize();
     }
-
-
 }
