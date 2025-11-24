@@ -139,6 +139,27 @@ class DataStructure extends AbstractDataStructure implements OpenApiSchemaProvid
                 'example' => 7
             ],
 
+            'attachment' => [
+                'type' => 'string',
+                'description' => 'rest_schema_tasks_attachment',
+                'maxLength' => 500,
+                'example' => '/storage/usbdisk1/mikopbx/tmp/task_document.pdf'
+            ],
+
+            'filename' => [
+                'type' => 'string',
+                'description' => 'rest_schema_tasks_filename',
+                'maxLength' => 255,
+                'example' => 'project_documentation.pdf'
+            ],
+
+            'file' => [
+                'type' => 'string',
+                'format' => 'binary',
+                'description' => 'rest_schema_tasks_file',
+                'example' => '(binary file data)'
+            ],
+
             // ========== RESPONSE-ONLY FIELDS ==========
             // These fields are only in API responses, not in requests
 

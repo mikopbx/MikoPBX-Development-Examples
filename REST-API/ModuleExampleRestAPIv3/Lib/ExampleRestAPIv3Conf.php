@@ -24,9 +24,9 @@ namespace Modules\ModuleExampleRestAPIv3\Lib;
 use MikoPBX\Modules\Config\ConfigClass;
 
 /**
- * Example Module: REST API v3 (Modern Pattern 4)
+ * Example Module: REST API v3 (Modern Pattern 3)
  *
- * Demonstrates Pattern 4: Modern Auto-Discovery with OpenAPI
+ * Demonstrates Pattern 3: Modern Auto-Discovery with OpenAPI
  *
  * WHY: This is the recommended pattern for all new modules. It provides:
  * - Automatic controller discovery via ControllerDiscovery::discoverModuleControllers()
@@ -43,19 +43,37 @@ use MikoPBX\Modules\Config\ConfigClass;
  * - Modules requiring proper API versioning
  *
  * HOW IT WORKS:
- * 1. Controllers in API/Controllers/ are discovered automatically
+ * 1. Controllers in Lib/RestAPI/ are discovered automatically
  * 2. PHP 8 attributes define routes and schemas (#[ApiResource], #[HttpMapping])
- * 3. Processor enums route to dedicated Action classes
+ * 3. Processor routes requests to dedicated Action classes
  * 4. DataStructure classes define validation schemas
  * 5. OpenAPI spec is generated from attributes
  *
- * IMPORTANT: Pattern 4 uses ConfigClass (not PbxExtensionBase) because:
+ * MIKOPBX REST API PATTERNS (3 total):
+ *
+ * Pattern 1: Basic REST API
+ * - Manual route registration in moduleRestAPICallback()
+ * - Simple, direct approach for basic endpoints
+ * - Good for learning and simple use cases
+ *
+ * Pattern 2: Extended REST API
+ * - Namespace isolation with module prefix
+ * - Manual registration but with better organization
+ * - Prevents endpoint conflicts between modules
+ *
+ * Pattern 3: Modern Auto-Discovery (THIS MODULE)
+ * - Automatic controller discovery via attributes
+ * - OpenAPI 3.1 schema generation
+ * - Processor + Actions architecture
+ * - Recommended for all new development
+ *
+ * IMPORTANT: Pattern 3 uses ConfigClass (not PbxExtensionBase) because:
  * - ConfigClass already implements RestAPIConfigInterface
  * - Provides empty implementations for all interface methods
  * - Controllers are discovered automatically, no manual route registration needed
  * - We don't need to override any methods unless we want custom behavior
  *
- * IMPORTANT DIFFERENCES FROM PATTERN 1:
+ * IMPORTANT DIFFERENCES FROM PATTERN 1 & 2:
  * - NO moduleRestAPICallback() method needed
  * - Controllers discovered via directory scan + #[ApiResource] attribute
  * - Routes registered via RouterProvider automatically
@@ -67,6 +85,6 @@ class ExampleRestAPIv3Conf extends ConfigClass
 {
     // No methods needed!
     // ConfigClass already implements RestAPIConfigInterface with empty stubs
-    // Pattern 4 controllers are discovered automatically via ControllerDiscovery
+    // Pattern 3 controllers are discovered automatically via ControllerDiscovery
     // No manual route registration required
 }

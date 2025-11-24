@@ -68,15 +68,16 @@ use MikoPBX\PBXCoreREST\Attributes\{
 )]
 #[HttpMapping(
     mapping: [
-        'GET'    => ['getList', 'getRecord', 'getDefault'],
-        'POST'   => ['create'],
+        'GET'    => ['getList', 'getRecord', 'getDefault', 'download'],
+        'POST'   => ['create', 'uploadFile'],
         'PUT'    => ['update'],
         'PATCH'  => ['patch'],
         'DELETE' => ['delete']
     ],
-    resourceLevelMethods: ['getRecord', 'update', 'patch', 'delete'],
+    resourceLevelMethods: ['getRecord', 'update', 'patch', 'delete', 'download', 'uploadFile'],
     collectionLevelMethods: ['getList', 'create', 'getDefault'],
-    customMethods: ['getDefault']
+    customMethods: ['getDefault', 'download', 'uploadFile'],
+    idPattern: '[^/:]+' // Exclude colon to allow custom methods like /tasks/1:download
 )]
 #[ResourceSecurity('module-example-rest-api-v3-tasks', requirements: [SecurityType::LOCALHOST, SecurityType::BEARER_TOKEN])]
 class Controller extends BaseRestController
@@ -226,4 +227,58 @@ class Controller extends BaseRestController
     #[ApiResponse(401, 'rest_response_401')]
     #[ApiResponse(500, 'rest_response_500')]
     public function getDefault(): void {}
+
+    /**
+     * Download file attached to a task
+     *
+     * @route GET /pbxcore/api/v3/module-example-rest-api-v3/tasks/{id}:download
+     */
+    #[ApiOperation(
+        summary: 'rest_tasks_Download',
+        description: 'rest_tasks_DownloadDesc',
+        operationId: 'downloadTaskFile'
+    )]
+    #[ApiParameterRef('filename', dataStructure: DataStructure::class, required: false)]
+    #[ApiResponse(200, 'rest_response_200_file_download')]
+    #[ApiResponse(401, 'rest_response_401')]
+    #[ApiResponse(403, 'rest_response_403')]
+    #[ApiResponse(404, 'rest_response_404')]
+    #[ApiResponse(500, 'rest_response_500')]
+    public function download(): void {}
+
+    /**
+     * Upload file to attach to a task
+     *
+     * @route POST /pbxcore/api/v3/module-example-rest-api-v3/tasks/{id}:uploadFile
+     */
+    #[ApiOperation(
+        summary: 'rest_tasks_UploadFile',
+        description: 'rest_tasks_UploadFileDesc',
+        operationId: 'uploadTaskFile',
+        requestBody: [
+            'required' => true,
+            'content' => [
+                'multipart/form-data' => [
+                    'schema' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'file' => [
+                                'type' => 'string',
+                                'format' => 'binary',
+                                'description' => 'File to upload (mp3, wav, pdf, png, jpeg - max 10MB)'
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    )]
+    #[ApiResponse(200, 'rest_response_200_chunk_received')]
+    #[ApiResponse(201, 'rest_response_201_uploaded')]
+    #[ApiResponse(202, 'rest_response_202_merging')]
+    #[ApiResponse(400, 'rest_response_400')]
+    #[ApiResponse(401, 'rest_response_401')]
+    #[ApiResponse(413, 'rest_response_413_too_large')]
+    #[ApiResponse(500, 'rest_response_500')]
+    public function uploadFile(): void {}
 }

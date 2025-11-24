@@ -27,7 +27,9 @@ use Modules\ModuleExampleRestAPIv3\Lib\RestAPI\Tasks\Actions\{
     GetRecordAction,
     SaveRecordAction,
     DeleteRecordAction,
-    GetDefaultAction
+    GetDefaultAction,
+    DownloadFileAction,
+    UploadFileAction
 };
 use Phalcon\Di\Injectable;
 
@@ -85,6 +87,14 @@ class Processor extends Injectable
 
             case 'getDefault':
                 $res = GetDefaultAction::main($request['data'] ?? []);
+                break;
+
+            case 'download':
+                $res = DownloadFileAction::main($request['data'] ?? []);
+                break;
+
+            case 'uploadFile':
+                $res = UploadFileAction::main($request['data'] ?? []);
                 break;
 
             default:

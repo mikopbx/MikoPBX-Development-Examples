@@ -18,6 +18,30 @@
 </div>
 
 <div class="ui segment">
+    <h3>File Operations (Upload & Download)</h3>
+    <div class="ui form">
+        <div class="field">
+            <label>Task ID for file operations:</label>
+            <input type="number" id="file-task-id" placeholder="1" value="1" min="1">
+        </div>
+        <div class="field">
+            <div class="ui indicating progress" id="upload-progress" data-percent="0">
+                <div class="bar"></div>
+                <div class="label">Ready to upload</div>
+            </div>
+        </div>
+        <button class="ui blue button" id="upload-file-btn">
+            <i class="upload icon"></i>
+            Upload File (mp3, wav, pdf, png, jpeg - max 10MB)
+        </button>
+        <button class="ui violet button" id="download-file-btn">
+            <i class="download icon"></i>
+            Download Last File
+        </button>
+    </div>
+</div>
+
+<div class="ui segment">
     <h4>API Response</h4>
     <pre id="api-response-v3"><code>Click button to test...</code></pre>
 </div>

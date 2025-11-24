@@ -27,16 +27,28 @@ use MikoPBX\Modules\Setup\PbxExtensionSetupBase;
  * WHY: Required class for module installation/uninstallation
  * Handles database table creation from Models automatically
  *
- * IMPORTANT: For Pattern 4 modules:
- * - Database tables auto-created from Models/Tasks.php
- * - No manual migration needed
- * - API routes auto-discovered from API/Controllers/
+ * HOW IT WORKS:
+ * 1. During module installation, PbxExtensionSetupBase scans Models/ folder
+ * 2. Reads Phalcon annotations from model classes (Tasks.php)
+ * 3. Auto-generates CREATE TABLE SQL statements
+ * 4. Executes SQL to create m_ModuleExampleRestAPIv3_Tasks table
+ *
+ * WHAT THIS MODULE CREATES:
+ * - Database tables: m_ModuleExampleRestAPIv3_Tasks (from Models/Tasks.php)
+ * - REST API routes: auto-discovered from Lib/RestAPI/Tasks/Controller.php
+ * - No manual database migrations needed
+ *
+ * REST API AUTO-DISCOVERY:
+ * - ControllerDiscovery scans Lib/RestAPI for files ending with *Controller.php
+ * - Finds Controller.php with #[ApiResource] attribute
+ * - RouterProvider registers routes automatically
  *
  * @package Modules\ModuleExampleRestAPIv3\Setup
  */
 class PbxExtensionSetup extends PbxExtensionSetupBase
 {
     // No custom installation logic needed
-    // Database tables created automatically from Models/Tasks.php
-    // API controllers discovered automatically from API/Controllers/Tasks/RestController.php
+    // Everything is automatic:
+    // - Database tables created from Models/Tasks.php annotations
+    // - API routes discovered from Lib/RestAPI/Tasks/Controller.php attributes
 }

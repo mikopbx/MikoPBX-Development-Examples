@@ -1,30 +1,51 @@
 # ModuleExampleRestAPIv3
 
-**Modern REST API v3 Module Example for MikoPBX (Pattern 2025)**
+**Modern REST API v3 Module Example for MikoPBX (Pattern 3: Auto-Discovery)**
 
 [Русская версия](README.ru.md)
 
 ## Overview
 
-This module demonstrates the **modern recommended approach** for building REST API endpoints in MikoPBX using PHP 8.3 attributes and automatic controller discovery. It showcases the new architectural pattern introduced in 2025 that significantly simplifies REST API development for modules.
+This module demonstrates **Pattern 3 (Auto-Discovery)** - the recommended approach for building REST API endpoints in MikoPBX using PHP 8.3 attributes and automatic controller discovery.
+
+## MikoPBX REST API Patterns
+
+MikoPBX supports 3 REST API patterns for module development:
+
+### Pattern 1: Basic REST API
+- Manual route registration in `moduleRestAPICallback()`
+- Simple, direct approach for basic endpoints
+- Good for learning and simple use cases
+
+### Pattern 2: Extended REST API
+- Namespace isolation with module prefix
+- Manual registration but with better organization
+- Prevents endpoint conflicts between modules
+
+### Pattern 3: Modern Auto-Discovery (THIS MODULE)
+- **Automatic controller discovery** via `#[ApiResource]` attributes
+- **OpenAPI 3.1** schema auto-generation from DataStructure classes
+- **Processor + Actions** architecture for clean code separation
+- **Recommended for all new development**
 
 ## Key Features
 
-- ✅ **Auto-Discovery** - Controllers are automatically discovered from `Lib/RestAPI/` directory
+- ✅ **Auto-Discovery** - Controllers automatically discovered from `Lib/RestAPI/` directory
 - ✅ **PHP 8 Attributes** - Declarative routing using `#[ApiResource]`, `#[ApiOperation]`, etc.
 - ✅ **OpenAPI 3.1** - Automatic OpenAPI specification generation
 - ✅ **7-Phase Pattern** - Structured data processing (sanitization → validation → save)
+- ✅ **File Operations** - Chunked file upload with Resumable.js and secure download
 - ✅ **Security Integration** - JWT Bearer token authentication
 - ✅ **Multilingual** - Translation support for API documentation
 - ✅ **Clean Architecture** - Clear separation of concerns
 
-## Architecture (New Pattern 2025)
+## Architecture
 
 ### Directory Structure
 
 ```
 ModuleExampleRestAPIv3/
-├── Lib/RestAPI/                    # REST API components (NEW)
+├── Lib/RestAPI/                    # REST API components
 │   └── Tasks/                      # Resource namespace
 │       ├── Controller.php          # HTTP interface with attributes
 │       ├── Processor.php           # Request router
@@ -34,44 +55,28 @@ ModuleExampleRestAPIv3/
 │           ├── GetRecordAction.php
 │           ├── SaveRecordAction.php
 │           ├── DeleteRecordAction.php
-│           └── GetDefaultAction.php
+│           ├── GetDefaultAction.php
+│           ├── DownloadFileAction.php
+│           └── UploadFileAction.php
+├── Models/Tasks.php                # Phalcon ORM model
+├── Setup/PbxExtensionSetup.php    # Module installer
 ├── Messages/                       # Translations
 │   ├── en.php
 │   └── ru.php
-└── App/Views/                      # Frontend UI
-    └── ModuleExampleRestAPIv3/
-        └── index.volt
+└── App/                            # Web UI for testing
+    ├── Controllers/ModuleExampleRestAPIv3Controller.php
+    ├── Views/ModuleExampleRestAPIv3/index.volt
+    └── public/assets/js/
 ```
 
 ### Why This Pattern?
 
-**✅ Benefits:**
-- All resource components in one folder (3 levels instead of 5)
+**Benefits:**
+- All resource components in one folder (`Lib/RestAPI/Tasks/`)
 - Semantically clear: "Tasks" = resource namespace
 - Easy to scale: add new resources as siblings
-- No Frontend/Backend split - simpler navigation
-- Automatic route registration - no manual router config
-
-**❌ Old Pattern (2024):**
-```
-API/
-├── Controllers/
-│   └── Tasks/
-│       └── RestController.php
-└── Lib/
-    └── Tasks/
-        └── TasksProcessor.php
-```
-
-**✅ New Pattern (2025):**
-```
-Lib/RestAPI/
-└── Tasks/
-    ├── Controller.php
-    ├── Processor.php
-    ├── DataStructure.php
-    └── Actions/
-```
+- Automatic route registration - no manual configuration needed
+- OpenAPI documentation generated from code
 
 ## Request Flow
 
@@ -131,15 +136,6 @@ Lib/RestAPI/
 │   - Transform to API format                             │
 └──────┬──────────────────────────────────────────────────┘
        │
-       ▼ Uses DataStructure
-┌─────────────────────────────────────────────────────────┐
-│ DataStructure.php                                       │
-│ - Field definitions (types, constraints, defaults)      │
-│ - Sanitization rules                                    │
-│ - Validation schemas                                    │
-│ - Response formatting                                   │
-└──────┬──────────────────────────────────────────────────┘
-       │
        ▼ PBXApiResult
 ┌─────────────────────────────────────────────────────────┐
 │ Response                                                │
@@ -172,6 +168,8 @@ Lib/RestAPI/
 | PATCH | `/tasks/{id}` | patch | Partial update (only specified fields) |
 | DELETE | `/tasks/{id}` | delete | Delete task by ID |
 | GET | `/tasks:getDefault` | getDefault | Get default values for new task |
+| GET | `/tasks/{id}:download` | download | Download file attached to task |
+| POST | `/tasks/{id}:uploadFile` | uploadFile | Upload file to attach to task |
 
 ### Authentication
 
@@ -186,132 +184,46 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - `SecurityType::LOCALHOST` - Access from localhost without token
 - `SecurityType::BEARER_TOKEN` - JWT token required for remote access
 
-## File Structure Explained
+## File Upload & Download
 
-### 1. Controller.php
-**Purpose:** HTTP interface layer with OpenAPI attributes
+### Upload File
 
-```php
-#[ApiResource(
-    path: '/pbxcore/api/v3/module-example-rest-api-v3/tasks',
-    tags: ['Module Example REST API v3 - Tasks'],
-    processor: Processor::class
-)]
-#[ResourceSecurity('module-example-rest-api-v3-tasks', requirements: [
-    SecurityType::LOCALHOST,
-    SecurityType::BEARER_TOKEN
-])]
-class Controller extends BaseRestController
-{
-    #[ApiOperation(summary: 'rest_tasks_GetList')]
-    #[ApiParameterRef('limit')]
-    public function getList(): void {}
-}
+**Chunked upload using Resumable.js:**
+
+```bash
+# Files are uploaded via Core's upload API first
+POST /pbxcore/api/v3/files:upload
+
+# Then attached to task (resource-level custom method)
+POST /pbxcore/api/v3/module-example-rest-api-v3/tasks/1:uploadFile
 ```
 
-**Key Features:**
-- Attributes define routes, security, parameters
-- Empty methods (implementation in Actions)
-- Automatic OpenAPI generation
-- Translation keys for documentation
+**Features:**
+- Chunked upload support for large files
+- Progress tracking via EventBus
+- Automatic file type validation
+- Max file size: 10MB (configurable)
+- Supported formats: mp3, wav, pdf, png, jpeg
 
-### 2. Processor.php
-**Purpose:** Routes requests to Action classes
+### Download File
 
-```php
-public static function callBack(array $request): PBXApiResult
-{
-    $action = $request['action'] ?? '';
+```bash
+# Download file from task
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     https://your-mikopbx.com/pbxcore/api/v3/module-example-rest-api-v3/tasks/1:download \
+     -o downloaded_file.pdf
 
-    switch ($action) {
-        case 'getRecord':
-            return GetRecordAction::main($request['data'] ?? []);
-        case 'create':
-        case 'update':
-        case 'patch':
-            return SaveRecordAction::main($request['data'] ?? []);
-        // ...
-    }
-}
+# Download with custom filename
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     "https://your-mikopbx.com/pbxcore/api/v3/module-example-rest-api-v3/tasks/1:download?filename=report.pdf" \
+     -o report.pdf
 ```
 
-**Pattern:** Simple switch statement routing to Action classes
-
-### 3. DataStructure.php
-**Purpose:** Single source of truth for field definitions
-
-```php
-public static function getParameterDefinitions(): array
-{
-    return [
-        'request' => [
-            'title' => [
-                'type' => 'string',
-                'minLength' => 1,
-                'maxLength' => 255,
-                'sanitize' => 'text',
-                'required' => true
-            ],
-            'status' => [
-                'type' => 'string',
-                'enum' => ['pending', 'in_progress', 'completed'],
-                'default' => 'pending'
-            ]
-        ],
-        'response' => [
-            'id' => ['type' => 'integer'],
-            'title' => ['type' => 'string'],
-            'status' => ['type' => 'string']
-        ]
-    ];
-}
-```
-
-**Benefits:**
-- All constraints in one place
-- Auto-generate sanitization rules
-- Controllers reference with `#[ApiParameterRef]`
-- No duplicate definitions
-
-### 4. Actions/
-**Purpose:** Business logic implementation
-
-Each Action implements one operation:
-- `GetListAction` - Retrieve multiple records
-- `GetRecordAction` - Retrieve single record
-- `SaveRecordAction` - Create/Update/Patch record (7-phase pattern)
-- `DeleteRecordAction` - Delete record
-- `GetDefaultAction` - Get default values
-
-**7-Phase SaveRecordAction Pattern:**
-
-```php
-public static function main(array $data): PBXApiResult
-{
-    // PHASE 1: SANITIZATION - Security first
-    $sanitizedData = self::sanitizeInputData($data, ...);
-
-    // PHASE 2: REQUIRED VALIDATION - Fail fast
-    $errors = self::validateRequiredFields($sanitizedData, ...);
-
-    // PHASE 3: DETERMINE OPERATION - New vs existing
-    $isNewRecord = empty($sanitizedData['id']);
-
-    // PHASE 4: APPLY DEFAULTS - CREATE only!
-    if ($isNewRecord) {
-        $sanitizedData = DataStructure::applyDefaults($sanitizedData);
-    }
-
-    // PHASE 5: SCHEMA VALIDATION - After defaults
-    $schemaErrors = DataStructure::validateInputData($sanitizedData);
-
-    // PHASE 6: SAVE - Transaction wrapper
-    $model = self::executeInTransaction(fn() => ...);
-
-    // PHASE 7: RESPONSE - Consistent format
-    return $result;
-}
-```
+**Security Features:**
+- Directory whitelist prevents path traversal attacks
+- File validation (existence, readability)
+- Proper MIME type detection
+- Range requests support for audio/video
 
 ## Development Guide
 
@@ -373,7 +285,7 @@ class GetListAction {
 
 1. **Access OpenAPI UI:**
    - Navigate to module page
-   - Click "Open OpenAPI Tools" button
+   - Click "View API Documentation" link
    - Or directly: `/admin-cabinet/api-keys/openapi#/operations/getTasksList`
 
 2. **Authorize:**
@@ -383,7 +295,8 @@ class GetListAction {
 
 3. **Try it:**
    - Select operation (e.g., "Get tasks list")
-   - Click "Try it"
+   - Click "Try it out"
+   - Click "Execute"
    - View request/response
 
 ## Best Practices
@@ -394,7 +307,7 @@ class GetListAction {
 - Apply defaults ONLY on CREATE (never UPDATE/PATCH)
 - Use `isset()` checks for PATCH support
 - Add WHY comments in complex logic
-- Include module namespace in path: `/modules/{module-name}/{resource}`
+- Include module namespace in path: `/module-{name}/{resource}`
 
 ### ❌ DON'T:
 - Define sanitization rules inline (use DataStructure)
@@ -409,6 +322,7 @@ class GetListAction {
 - Check controller filename ends with `Controller.php`
 - Verify `#[ApiResource]` attribute present
 - Ensure `processor` parameter points to valid Processor class
+- Check that controller is in `Lib/RestAPI/` directory
 
 ### ID parameter not reaching Action?
 - Check Processor passes `$request['data']` not entire `$request`
@@ -424,11 +338,11 @@ class GetListAction {
 - Format: `rest_{resource}_{Operation}` for summaries
 - Format: `rest_tag_{ModuleName}{Resource}` for tags
 
-## References
-
-- [MikoPBX REST API Guide](../../project-modules-api-refactoring/src/PBXCoreREST/CLAUDE.md)
-- [Google API Design Guide](https://cloud.google.com/apis/design)
-- [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0)
+### File upload not working?
+- Check file size doesn't exceed 10MB limit
+- Verify file type is in allowed list (mp3, wav, pdf, png, jpeg)
+- Ensure Core's FilesAPI is properly loaded
+- Check browser console for JavaScript errors
 
 ## License
 

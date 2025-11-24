@@ -1,12 +1,32 @@
 # ModuleExampleRestAPIv3
 
-**Современный пример модуля REST API v3 для MikoPBX (Паттерн 2025)**
+**Современный пример модуля REST API v3 для MikoPBX (Pattern 3: Авто-обнаружение)**
 
 [English version](README.md)
 
 ## Обзор
 
-Этот модуль демонстрирует **современный рекомендуемый подход** к созданию REST API endpoints в MikoPBX с использованием атрибутов PHP 8.3 и автоматического обнаружения контроллеров. Он показывает новую архитектурную модель, представленную в 2025 году, которая значительно упрощает разработку REST API для модулей.
+Этот модуль демонстрирует **Pattern 3 (Авто-обнаружение)** - рекомендуемый подход к созданию REST API endpoints в MikoPBX с использованием атрибутов PHP 8.3 и автоматического обнаружения контроллеров.
+
+## Паттерны REST API в MikoPBX
+
+MikoPBX поддерживает 3 паттерна REST API для разработки модулей:
+
+### Pattern 1: Базовый REST API
+- Ручная регистрация маршрутов в `moduleRestAPICallback()`
+- Простой, прямой подход для базовых endpoints
+- Подходит для обучения и простых случаев использования
+
+### Pattern 2: Расширенный REST API
+- Изоляция пространства имён с префиксом модуля
+- Ручная регистрация, но с лучшей организацией
+- Предотвращает конфликты endpoints между модулями
+
+### Pattern 3: Современное авто-обнаружение (ЭТОТ МОДУЛЬ)
+- **Автоматическое обнаружение контроллеров** через атрибуты `#[ApiResource]`
+- **OpenAPI 3.1** автоматическая генерация схем из классов DataStructure
+- **Processor + Actions** архитектура для чистого разделения кода
+- **Рекомендуется для всех новых разработок**
 
 ## Ключевые особенности
 
@@ -14,17 +34,18 @@
 - ✅ **Атрибуты PHP 8** - Декларативная маршрутизация через `#[ApiResource]`, `#[ApiOperation]` и т.д.
 - ✅ **OpenAPI 3.1** - Автоматическая генерация OpenAPI спецификации
 - ✅ **7-фазный паттерн** - Структурированная обработка данных (санитизация → валидация → сохранение)
+- ✅ **Файловые операции** - Чанк-загрузка с Resumable.js и безопасная выгрузка
 - ✅ **Интеграция безопасности** - JWT Bearer token аутентификация
 - ✅ **Мультиязычность** - Поддержка переводов для API документации
 - ✅ **Чистая архитектура** - Четкое разделение ответственности
 
-## Архитектура (Новый паттерн 2025)
+## Архитектура
 
 ### Структура директорий
 
 ```
 ModuleExampleRestAPIv3/
-├── Lib/RestAPI/                    # Компоненты REST API (НОВОЕ)
+├── Lib/RestAPI/                    # Компоненты REST API
 │   └── Tasks/                      # Пространство имён ресурса
 │       ├── Controller.php          # HTTP интерфейс с атрибутами
 │       ├── Processor.php           # Маршрутизатор запросов
@@ -34,44 +55,28 @@ ModuleExampleRestAPIv3/
 │           ├── GetRecordAction.php
 │           ├── SaveRecordAction.php
 │           ├── DeleteRecordAction.php
-│           └── GetDefaultAction.php
+│           ├── GetDefaultAction.php
+│           ├── DownloadFileAction.php
+│           └── UploadFileAction.php
+├── Models/Tasks.php                # Phalcon ORM модель
+├── Setup/PbxExtensionSetup.php    # Установщик модуля
 ├── Messages/                       # Переводы
 │   ├── en.php
 │   └── ru.php
-└── App/Views/                      # Frontend UI
-    └── ModuleExampleRestAPIv3/
-        └── index.volt
+└── App/                            # Web UI для тестирования
+    ├── Controllers/ModuleExampleRestAPIv3Controller.php
+    ├── Views/ModuleExampleRestAPIv3/index.volt
+    └── public/assets/js/
 ```
 
 ### Почему этот паттерн?
 
-**✅ Преимущества:**
-- Все компоненты ресурса в одной папке (3 уровня вместо 5)
+**Преимущества:**
+- Все компоненты ресурса в одной папке (`Lib/RestAPI/Tasks/`)
 - Семантическая ясность: "Tasks" = пространство имён ресурса
 - Легко масштабировать: добавляйте новые ресурсы как соседние папки
-- Нет разделения Frontend/Backend - проще навигация
-- Автоматическая регистрация маршрутов - не нужна ручная настройка роутера
-
-**❌ Старый паттерн (2024):**
-```
-API/
-├── Controllers/
-│   └── Tasks/
-│       └── RestController.php
-└── Lib/
-    └── Tasks/
-        └── TasksProcessor.php
-```
-
-**✅ Новый паттерн (2025):**
-```
-Lib/RestAPI/
-└── Tasks/
-    ├── Controller.php
-    ├── Processor.php
-    ├── DataStructure.php
-    └── Actions/
-```
+- Автоматическая регистрация маршрутов - не нужна ручная настройка
+- Документация OpenAPI генерируется из кода
 
 ## Поток обработки запроса
 
@@ -131,15 +136,6 @@ Lib/RestAPI/
 │   - Преобразование в формат API                         │
 └──────┬──────────────────────────────────────────────────┘
        │
-       ▼ Использует DataStructure
-┌─────────────────────────────────────────────────────────┐
-│ DataStructure.php                                       │
-│ - Определения полей (типы, ограничения, значения)      │
-│ - Правила санитизации                                   │
-│ - Схемы валидации                                       │
-│ - Форматирование ответов                                │
-└──────┬──────────────────────────────────────────────────┘
-       │
        ▼ PBXApiResult
 ┌─────────────────────────────────────────────────────────┐
 │ Response                                                │
@@ -172,6 +168,8 @@ Lib/RestAPI/
 | PATCH | `/tasks/{id}` | patch | Частичное обновление (только указанные поля) |
 | DELETE | `/tasks/{id}` | delete | Удалить задачу по ID |
 | GET | `/tasks:getDefault` | getDefault | Получить значения по умолчанию для новой задачи |
+| GET | `/tasks/{id}:download` | download | Скачать файл, прикрепленный к задаче |
+| POST | `/tasks/{id}:uploadFile` | uploadFile | Загрузить файл для прикрепления к задаче |
 
 ### Аутентификация
 
@@ -186,132 +184,46 @@ curl -H "Authorization: Bearer ВАШ_JWT_ТОКЕН" \
 - `SecurityType::LOCALHOST` - Доступ с localhost без токена
 - `SecurityType::BEARER_TOKEN` - Требуется JWT токен для удалённого доступа
 
-## Описание структуры файлов
+## Загрузка и выгрузка файлов
 
-### 1. Controller.php
-**Назначение:** Слой HTTP интерфейса с атрибутами OpenAPI
+### Загрузка файла
 
-```php
-#[ApiResource(
-    path: '/pbxcore/api/v3/module-example-rest-api-v3/tasks',
-    tags: ['Module Example REST API v3 - Tasks'],
-    processor: Processor::class
-)]
-#[ResourceSecurity('module-example-rest-api-v3-tasks', requirements: [
-    SecurityType::LOCALHOST,
-    SecurityType::BEARER_TOKEN
-])]
-class Controller extends BaseRestController
-{
-    #[ApiOperation(summary: 'rest_tasks_GetList')]
-    #[ApiParameterRef('limit')]
-    public function getList(): void {}
-}
+**Чанк-загрузка с использованием Resumable.js:**
+
+```bash
+# Файлы сначала загружаются через API Core
+POST /pbxcore/api/v3/files:upload
+
+# Затем прикрепляются к задаче (resource-level custom method)
+POST /pbxcore/api/v3/module-example-rest-api-v3/tasks/1:uploadFile
 ```
 
-**Ключевые особенности:**
-- Атрибуты определяют маршруты, безопасность, параметры
-- Пустые методы (реализация в Actions)
-- Автоматическая генерация OpenAPI
-- Ключи переводов для документации
+**Возможности:**
+- Поддержка чанк-загрузки для больших файлов
+- Отслеживание прогресса через EventBus
+- Автоматическая валидация типа файла
+- Максимальный размер файла: 10МБ (настраивается)
+- Поддерживаемые форматы: mp3, wav, pdf, png, jpeg
 
-### 2. Processor.php
-**Назначение:** Маршрутизирует запросы к Action классам
+### Скачивание файла
 
-```php
-public static function callBack(array $request): PBXApiResult
-{
-    $action = $request['action'] ?? '';
+```bash
+# Скачать файл из задачи
+curl -H "Authorization: Bearer ВАШ_ТОКЕН" \
+     https://ваш-mikopbx.com/pbxcore/api/v3/module-example-rest-api-v3/tasks/1:download \
+     -o downloaded_file.pdf
 
-    switch ($action) {
-        case 'getRecord':
-            return GetRecordAction::main($request['data'] ?? []);
-        case 'create':
-        case 'update':
-        case 'patch':
-            return SaveRecordAction::main($request['data'] ?? []);
-        // ...
-    }
-}
+# Скачать с пользовательским именем файла
+curl -H "Authorization: Bearer ВАШ_ТОКЕН" \
+     "https://ваш-mikopbx.com/pbxcore/api/v3/module-example-rest-api-v3/tasks/1:download?filename=отчет.pdf" \
+     -o отчет.pdf
 ```
 
-**Паттерн:** Простой switch statement для маршрутизации к Action классам
-
-### 3. DataStructure.php
-**Назначение:** Единый источник истины для определения полей
-
-```php
-public static function getParameterDefinitions(): array
-{
-    return [
-        'request' => [
-            'title' => [
-                'type' => 'string',
-                'minLength' => 1,
-                'maxLength' => 255,
-                'sanitize' => 'text',
-                'required' => true
-            ],
-            'status' => [
-                'type' => 'string',
-                'enum' => ['pending', 'in_progress', 'completed'],
-                'default' => 'pending'
-            ]
-        ],
-        'response' => [
-            'id' => ['type' => 'integer'],
-            'title' => ['type' => 'string'],
-            'status' => ['type' => 'string']
-        ]
-    ];
-}
-```
-
-**Преимущества:**
-- Все ограничения в одном месте
-- Авто-генерация правил санитизации
-- Контроллеры ссылаются через `#[ApiParameterRef]`
-- Нет дублирования определений
-
-### 4. Actions/
-**Назначение:** Реализация бизнес-логики
-
-Каждый Action реализует одну операцию:
-- `GetListAction` - Получение множества записей
-- `GetRecordAction` - Получение одной записи
-- `SaveRecordAction` - Создание/Обновление/Patch записи (7-фазный паттерн)
-- `DeleteRecordAction` - Удаление записи
-- `GetDefaultAction` - Получение значений по умолчанию
-
-**7-фазный паттерн SaveRecordAction:**
-
-```php
-public static function main(array $data): PBXApiResult
-{
-    // ФАЗА 1: САНИТИЗАЦИЯ - Безопасность прежде всего
-    $sanitizedData = self::sanitizeInputData($data, ...);
-
-    // ФАЗА 2: ВАЛИДАЦИЯ ОБЯЗАТЕЛЬНЫХ ПОЛЕЙ - Быстрый отказ
-    $errors = self::validateRequiredFields($sanitizedData, ...);
-
-    // ФАЗА 3: ОПРЕДЕЛЕНИЕ ОПЕРАЦИИ - Новая vs существующая
-    $isNewRecord = empty($sanitizedData['id']);
-
-    // ФАЗА 4: ПРИМЕНЕНИЕ ЗНАЧЕНИЙ ПО УМОЛЧАНИЮ - Только CREATE!
-    if ($isNewRecord) {
-        $sanitizedData = DataStructure::applyDefaults($sanitizedData);
-    }
-
-    // ФАЗА 5: ВАЛИДАЦИЯ СХЕМЫ - После применения значений по умолчанию
-    $schemaErrors = DataStructure::validateInputData($sanitizedData);
-
-    // ФАЗА 6: СОХРАНЕНИЕ - Обёртка транзакции
-    $model = self::executeInTransaction(fn() => ...);
-
-    // ФАЗА 7: ОТВЕТ - Консистентный формат
-    return $result;
-}
-```
+**Функции безопасности:**
+- Белый список директорий предотвращает атаки обхода пути
+- Валидация файлов (существование, читаемость)
+- Правильное определение MIME типа
+- Поддержка Range запросов для аудио/видео
 
 ## Руководство по разработке
 
@@ -373,7 +285,7 @@ class GetListAction {
 
 1. **Доступ к OpenAPI UI:**
    - Перейдите на страницу модуля
-   - Нажмите кнопку "Открыть OpenAPI Tools"
+   - Нажмите ссылку "View API Documentation"
    - Или напрямую: `/admin-cabinet/api-keys/openapi#/operations/getTasksList`
 
 2. **Авторизация:**
@@ -383,7 +295,8 @@ class GetListAction {
 
 3. **Попробуйте:**
    - Выберите операцию (например, "Get tasks list")
-   - Нажмите "Try it"
+   - Нажмите "Try it out"
+   - Нажмите "Execute"
    - Просмотрите запрос/ответ
 
 ## Лучшие практики
@@ -394,7 +307,7 @@ class GetListAction {
 - Применяйте значения по умолчанию ТОЛЬКО при CREATE (никогда при UPDATE/PATCH)
 - Используйте проверки `isset()` для поддержки PATCH
 - Добавляйте WHY комментарии в сложной логике
-- Включайте namespace модуля в path: `/modules/{module-name}/{resource}`
+- Включайте namespace модуля в path: `/module-{name}/{resource}`
 
 ### ❌ НЕ ДЕЛАЙТЕ:
 - Определяйте правила санитизации inline (используйте DataStructure)
@@ -409,6 +322,7 @@ class GetListAction {
 - Проверьте, что имя файла контроллера заканчивается на `Controller.php`
 - Убедитесь, что атрибут `#[ApiResource]` присутствует
 - Проверьте, что параметр `processor` указывает на валидный Processor класс
+- Убедитесь, что контроллер находится в директории `Lib/RestAPI/`
 
 ### ID параметр не доходит до Action?
 - Проверьте, что Processor передаёт `$request['data']`, а не весь `$request`
@@ -424,11 +338,11 @@ class GetListAction {
 - Формат: `rest_{resource}_{Operation}` для summaries
 - Формат: `rest_tag_{ModuleName}{Resource}` для tags
 
-## Ссылки
-
-- [Руководство по REST API MikoPBX](../../project-modules-api-refactoring/src/PBXCoreREST/CLAUDE.md)
-- [Google API Design Guide](https://cloud.google.com/apis/design)
-- [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0)
+### Загрузка файлов не работает?
+- Проверьте, что размер файла не превышает лимит 10МБ
+- Убедитесь, что тип файла в списке разрешённых (mp3, wav, pdf, png, jpeg)
+- Проверьте, что FilesAPI Core правильно загружен
+- Проверьте консоль браузера на наличие ошибок JavaScript
 
 ## Лицензия
 
