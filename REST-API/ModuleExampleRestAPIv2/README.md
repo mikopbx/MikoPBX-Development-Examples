@@ -1,168 +1,149 @@
-# ModuleExampleRestAPIv2 - Pattern 2 (Transitional)
+# ModuleExampleRestAPIv2
 
 ## Overview
 
-Demonstrates **Pattern 2: Custom Controllers via ConfigClass** - good middle ground between simple callbacks and full v3 API.
+Educational example demonstrating **REST API with Backend Worker Architecture** in MikoPBX modules.
 
-## Key Features
+All API operations are processed asynchronously via `ModuleRestAPIProcessor` and Action classes.
 
-- ✅ Custom controller organization (Get/Post/File)
-- ✅ Route registration via `getPBXCoreRESTAdditionalRoutes()`
-- ✅ Extends `ConfigClass` for automatic interface implementation
-- ✅ Namespace isolation (`/modules/ModuleExampleRestAPIv2/`)
-- ✅ Better than Pattern 1, simpler than Pattern 4
+## Features
 
-## Important: ConfigClass vs PbxExtensionBase
-
-**Pattern 2 MUST extend `ConfigClass`, not `PbxExtensionBase`:**
-
-```php
-// ✅ CORRECT - Production pattern
-class ExampleRestAPIv2Conf extends ConfigClass
-{
-    public function getPBXCoreRESTAdditionalRoutes(): array { ... }
-    // ConfigClass already implements RestAPIConfigInterface
-}
-
-// ❌ WRONG - Will cause errors
-class ExampleRestAPIv2Conf extends PbxExtensionBase implements RestAPIConfigInterface
-{
-    public function getPBXCoreRESTAdditionalRoutes(): array { ... }
-    // Must implement 3 more methods manually!
-}
-```
-
-**Why ConfigClass?**
-- Already implements `RestAPIConfigInterface`
-- Provides empty stub implementations for all hooks
-- Used by all production modules (ModuleAutoDialer, ModuleUsersUI, etc.)
-- You only override what you need
+- Custom controller organization (GetController, PostController)
+- Route registration via `getPBXCoreRESTAdditionalRoutes()`
+- Backend worker processing via Redis queue
+- Action classes for business logic separation
+- File download with symlink approach
 
 ## Installation
 
+1. Copy module to MikoPBX:
 ```bash
 cp -r ModuleExampleRestAPIv2 /storage/usbdisk1/mikopbx/custom_modules/
 ```
 
-Enable via System → Modules
+2. Enable via System → Modules
 
 ## API Endpoints
 
-All endpoints: `/pbxcore/api/modules/ModuleExampleRestAPIv2/{Controller}/{action}`
+Base URL: `/pbxcore/api/module-example-rest-api-v2/`
 
 ### GET Operations
+
 ```bash
-# Get Config
-curl http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/Get/config
+# Get module configuration
+curl http://pbx/pbxcore/api/module-example-rest-api-v2/config
 
-# Get Users List
-curl http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/Get/users
+# Get users list with JOINs
+curl http://pbx/pbxcore/api/module-example-rest-api-v2/users
 
-# Get User by ID
-curl http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/Get/user?id=123
+# View file content (JSON)
+curl http://pbx/pbxcore/api/module-example-rest-api-v2/download?filename=example.txt
+
+# Download file (returns URL)
+curl http://pbx/pbxcore/api/module-example-rest-api-v2/download?filename=example.txt&mode=download
 ```
 
 ### POST Operations
+
 ```bash
-# Create Record
-curl -X POST http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/Post/create \
-  -d '{"name":"Test","value":"123"}'
+# Create user
+curl -X POST http://pbx/pbxcore/api/module-example-rest-api-v2/create \
+  -d 'name=Test User'
 
-# Update Record
-curl -X POST http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/Post/update \
-  -d '{"id":"123","name":"Updated"}'
+# Update user
+curl -X POST http://pbx/pbxcore/api/module-example-rest-api-v2/update \
+  -d 'id=123&name=Updated User'
 
-# Delete Record
-curl -X POST http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/Post/delete \
-  -d '{"id":"123"}'
-```
-
-### File Operations
-```bash
-# Download File
-curl http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/File/download?filename=test.log
-
-# Serve Static File
-curl http://localhost/pbxcore/api/modules/ModuleExampleRestAPIv2/File/static?path=public/file.pdf
+# Delete user
+curl -X POST http://pbx/pbxcore/api/module-example-rest-api-v2/delete \
+  -d 'id=123'
 ```
 
 ## Architecture
 
 ```
+Request → Controller → sendRequestToBackendWorker()
+       → Redis Queue → WorkerApiCommands
+       → ModuleRestAPIProcessor::callBack()
+       → Action::main() → Response
+```
+
+### File Structure
+
+```
 ModuleExampleRestAPIv2/
 ├── Lib/
-│   ├── ExampleRestAPIv2Conf.php          # Extends ConfigClass
-│   └── RestAPI/Controllers/              # Custom controllers
-│       ├── GetController.php
-│       ├── PostController.php
-│       └── FileController.php
-├── Models/ModuleExampleRestAPIv2.php     # Settings model
-└── App/
-    ├── Controllers/                       # UI controllers
-    └── Views/index.volt                   # Test interface
+│   ├── ExampleRestAPIv2Conf.php           # Route registration
+│   └── RestAPI/
+│       ├── Controllers/
+│       │   ├── GetController.php          # GET requests routing
+│       │   └── PostController.php         # POST requests routing
+│       └── Backend/
+│           ├── ModuleRestAPIProcessor.php # Worker router
+│           └── Actions/
+│               ├── GetConfigAction.php    # Query config
+│               ├── GetUsersAction.php     # Query users with JOINs
+│               ├── CreateUserAction.php   # Create user
+│               ├── UpdateUserAction.php   # Update user
+│               ├── DeleteUserAction.php   # Delete user
+│               └── DownloadFileAction.php # File download
+├── Models/
+│   └── ModuleExampleRestAPIv2.php         # Database model
+├── App/
+│   ├── Controllers/                        # UI controllers
+│   └── Views/index.volt                    # Test interface
+├── Messages/
+│   ├── en.php                              # English translations
+│   └── ru.php                              # Russian translations
+└── downloads/
+    └── example.txt                         # Test file
 ```
 
 ## Key Concepts
 
-### 1. ConfigClass Benefits
-- Implements all required interfaces (REST, System, WebUI, Asterisk)
-- Provides empty implementations for ~30 hook methods
-- Only override methods you actually use
-- Production-proven pattern
+### 1. Route Registration
 
-### 2. Route Registration
-Routes registered in `getPBXCoreRESTAdditionalRoutes()`:
+Routes defined in `ExampleRestAPIv2Conf::getPBXCoreRESTAdditionalRoutes()`:
+
 ```php
 return [
-    [GetController::class, 'callAction', '/pbxcore/api/modules/ModuleExampleRestAPIv2/Get/{actionName}', 'get', '/'],
-    [PostController::class, 'callAction', '/pbxcore/api/modules/ModuleExampleRestAPIv2/Post/{actionName}', 'post', '/'],
+    [GetController::class, 'callAction', '/pbxcore/api/module-example-rest-api-v2/{actionName}', 'get', ''],
+    [PostController::class, 'callAction', '/pbxcore/api/module-example-rest-api-v2/{actionName}', 'post', ''],
 ];
 ```
 
-### 3. Controller Organization
-Each controller handles specific operations:
-- `GetController` - Read operations (config, users, user)
-- `PostController` - Write operations (create, update, delete)
-- `FileController` - File operations (download, static)
+### 2. Controller → Backend Worker
 
-### 4. Namespace Isolation
-Path `/modules/ModuleExampleRestAPIv2/` prevents conflicts with Core and other modules
+Controllers delegate all work to backend worker:
 
-## When to Use
+```php
+$this->sendRequestToBackendWorker(
+    ModuleRestAPIProcessor::class,
+    self::ACTION_MAP[$actionName],
+    $_REQUEST
+);
+```
 
-**✅ Use Pattern 2 for:**
-- Modules with 5-15 API operations
-- When you need better organization than Pattern 1
-- Transitioning from Pattern 1 to Pattern 4
-- Modules that don't need OpenAPI docs yet
+### 3. Action Classes
 
-**❌ Don't use Pattern 2 for:**
-- Simple 1-3 operations (use Pattern 1)
-- Complex CRUD with validation (use Pattern 4)
-- New modules requiring OpenAPI (use Pattern 4)
+Each action is a separate class with `main()` method:
 
-## Comparison with Other Patterns
+```php
+class GetConfigAction extends Injectable
+{
+    public static function main(array $request): PBXApiResult
+    {
+        // Business logic here
+    }
+}
+```
 
-| Feature | Pattern 1 | Pattern 2 | Pattern 4 |
-|---------|-----------|-----------|-----------|
-| Base Class | PbxExtensionBase | **ConfigClass** | ConfigClass |
-| Interface | None | ConfigClass provides | Auto-discovery |
-| Routing | match() | Custom controllers | #[HttpMapping] |
-| Organization | Single method | Controller classes | Processor + Actions |
-| OpenAPI | ❌ | ❌ | ✅ |
-| Production Ready | Simple only | ✅ **Balanced** | ✅ Full-featured |
+### 4. File Download
 
-## Production Examples
+Two modes supported:
+- `mode=view` - Returns JSON with file content
+- `mode=download` - Creates symlink, returns URL for browser download
 
-Production modules using Pattern 2:
-- **ModuleAutoDialer** - Dialer API with 16 endpoints
-- **ModuleBackup** - Backup management API
-- **ModuleUsersUI** - User management with ACL
+## Requirements
 
-All extend `ConfigClass` and override only `getPBXCoreRESTAdditionalRoutes()`.
-
-## See Also
-
-- [MODULE_API_PATTERNS.md](../../../docs/MODULE_API_PATTERNS.md) - All patterns comparison
-- [PBXCoreREST/CLAUDE.md](../../../src/PBXCoreREST/CLAUDE.md) - API development guide
-- [ConfigClass.php](/Users/nb/PhpstormProjects/mikopbx/Core/src/Modules/Config/ConfigClass.php) - Base class reference
+- MikoPBX 2025.1.1 or later

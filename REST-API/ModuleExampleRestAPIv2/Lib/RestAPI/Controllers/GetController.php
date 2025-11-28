@@ -25,60 +25,37 @@ use MikoPBX\PBXCoreREST\Controllers\Modules\ModulesControllerBase;
 use Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\ModuleRestAPIProcessor;
 
 /**
- * GetController - Backend (Worker) approach for GET operations
+ * Controller for GET requests.
  *
- * SIMPLIFIED ARCHITECTURE:
- * All operations delegated to backend worker via ACTION_MAP.
- * No private methods - clean mapping from URL action to backend processor action.
- *
- * AVAILABLE ACTIONS:
- * - config: Get module configuration (GetConfigAction)
- * - users: Query users with JOINs (GetUsersAction)
- * - download: Download files (DownloadFileAction)
- *
- * ADDING NEW ACTIONS:
- * Just add to ACTION_MAP - no need for new methods!
+ * Available actions: config, users, download
+ * All operations delegated to backend worker via ModuleRestAPIProcessor.
  *
  * @package Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Controllers
  */
 class GetController extends ModulesControllerBase
 {
     /**
-     * Action mapping: URL action => Backend processor action
-     *
-     * WHY: Single source of truth for action routing
-     * Adding new action = add one line to this map
+     * URL action => processor action mapping.
      */
     private const ACTION_MAP = [
-        'config' => 'getConfig',      // GetConfigAction::main()
-        'users' => 'getUsers',        // GetUsersAction::main()
-        'download' => 'downloadFile', // DownloadFileAction::main()
+        'config' => 'getConfig',
+        'users' => 'getUsers',
+        'download' => 'downloadFile',
     ];
 
     /**
-     * Route actions to backend worker
-     *
-     * WHY: Simplified routing - no private methods needed
-     * All actions delegated to backend worker via ACTION_MAP
-     *
-     * EXAMPLE REQUESTS:
-     * curl 'http://127.0.0.1/pbxcore/api/module-example-rest-api-v2/config'
-     * curl 'http://127.0.0.1/pbxcore/api/module-example-rest-api-v2/users'
-     * curl -O 'http://127.0.0.1/pbxcore/api/module-example-rest-api-v2/download?filename=example.txt'
+     * Route action to backend worker.
      *
      * @param string $actionName Action name from URL
-     * @return void
      */
     public function callAction(string $actionName): void
     {
-        // Validate action exists
         if (!isset(self::ACTION_MAP[$actionName])) {
             $this->response->setPayloadError("Unknown action: {$actionName}");
             $this->response->send();
             return;
         }
 
-        // Send request to backend worker
         $this->sendRequestToBackendWorker(
             ModuleRestAPIProcessor::class,
             self::ACTION_MAP[$actionName],

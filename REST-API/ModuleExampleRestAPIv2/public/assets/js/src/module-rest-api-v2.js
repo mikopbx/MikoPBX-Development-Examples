@@ -19,44 +19,18 @@
 /* global globalRootUrl */
 
 /**
- * ModuleExampleRestAPIv2 - JavaScript for testing REST API
+ * ModuleExampleRestAPIv2 - JavaScript for testing REST API.
  *
- * BACKEND WORKER APPROACH:
- * All operations are processed through backend worker via ModuleRestAPIProcessor.
- * Controller delegates all requests to backend Actions for async processing.
- *
- * OPERATIONS:
- * - GET: config, users (via GetConfigAction, GetUsersAction)
- * - POST: create, update, delete (via CreateUserAction, UpdateUserAction, DeleteUserAction)
- * - FILE: download (via DownloadFileAction)
- *
- * HOW IT WORKS:
- * Request → Controller → sendRequestToBackendWorker()
- *        → Redis Queue → WorkerApiCommands
- *        → ModuleRestAPIProcessor::callBack()
- *        → Action::main() → Response
- *
- * PERFORMANCE: ~30-50ms (includes Redis queue overhead + processing time)
- *
- * BENEFITS:
- * - Non-blocking: PHP-FPM worker released immediately
- * - Async support: Multiple requests can be processed concurrently
- * - Database transactions: Safe ACID operations in worker
- * - Heavy operations: File generation, complex queries, external API calls
+ * All operations processed via backend worker (ModuleRestAPIProcessor).
  */
 const ModuleRestAPIv2 = {
     /**
-     * Store last created user ID for demo purposes
-     *
-     * WHY: Update and Delete operations need user ID
-     * After creating a user, we save the ID to use in subsequent operations
+     * Last created user ID for demo update/delete operations.
      */
     lastCreatedUserId: null,
 
     /**
-     * Initialize module
-     *
-     * WHY: Setup event handlers for testing buttons
+     * Initialize module.
      */
     initialize() {
         $('.test-api-v2').on('click', (e) => {
@@ -65,8 +39,8 @@ const ModuleRestAPIv2 = {
             const action = $btn.data('action');
             const download = $btn.data('download');
 
-            // WHY: File downloads need special handling (trigger browser download)
-            if (download === 'true') {
+            // jQuery .data() auto-converts "true" string to boolean
+            if (download === true || download === 'true') {
                 ModuleRestAPIv2.downloadFile(controller, action, $btn);
             } else {
                 ModuleRestAPIv2.testApi(controller, action, $btn);
@@ -75,28 +49,18 @@ const ModuleRestAPIv2 = {
     },
 
     /**
-     * Test API call to custom controller
+     * Test API call.
      *
-     * WHY: Demonstrates $.api usage with backend worker controllers
-     * All operations processed through ModuleRestAPIProcessor
-     *
-     * @param {string} controller - Controller name (Get, Post, File)
+     * @param {string} controller - Controller name (Get, Post)
      * @param {string} action - Action name
      * @param {jQuery} $btn - Button element
      */
     testApi(controller, action, $btn) {
-        // Show loading indicator
         $btn.addClass('loading disabled');
 
-        // WHY: Build URL for API routes
-        // Pattern: /pbxcore/api/module-example-rest-api-v2/{action}
-        // HTTP method (GET/POST) determines controller
         const url = `/pbxcore/api/module-example-rest-api-v2/${action}`;
 
         // Prepare request data for POST operations
-        // WHY: Different POST actions need different data
-        // - create: only name needed
-        // - update/delete: need ID of previously created user
         let requestData = {};
         if (controller === 'Post') {
             if (action === 'create') {
@@ -120,186 +84,115 @@ const ModuleRestAPIv2 = {
             }
         }
 
-        // WHY: Use $.api for proper authentication and session management
-        // Semantic UI handles cookies and CSRF tokens automatically
         $.api({
             url: url,
             method: controller === 'Post' ? 'POST' : 'GET',
             data: requestData,
             on: 'now',
             onSuccess(response) {
-                // WHY: Save created user ID for subsequent update/delete operations
+                // Save created user ID for subsequent operations
                 if (controller === 'Post' && action === 'create' && response.result === true) {
                     if (response.data && response.data.user && response.data.user.id) {
                         ModuleRestAPIv2.lastCreatedUserId = response.data.user.id;
-                        console.log('Saved user ID:', ModuleRestAPIv2.lastCreatedUserId);
                     }
                 }
 
-                // WHY: Check response.result (not response.success) - PBXApiResult returns 'result'
                 const isSuccess = response.result === true;
                 ModuleRestAPIv2.showResponse(response, isSuccess ? 'success' : 'error');
             },
             onFailure(response) {
-                // Handle HTTP errors
                 ModuleRestAPIv2.showResponse(
                     { error: response.statusText || 'Request failed' },
                     'error'
                 );
             },
             onError(errorMessage) {
-                // Handle network errors
                 ModuleRestAPIv2.showResponse({ error: errorMessage }, 'error');
             },
             onComplete() {
-                // WHY: Always remove loading state, even if error occurs
                 $btn.removeClass('loading disabled');
             },
         });
     },
 
     /**
-     * Show file content or download file based on mode
+     * Download or view file content.
      *
-     * WHY: TWO MODES - EXPLICIT AND SIMPLE
-     * - mode=view: Get file content as JSON, display in result area ($.api)
-     * - mode=download: Download file via browser (window.location)
-     *
-     * MODES:
-     * 1. VIEW (default, mode=view)
-     *    - GET /download?filename=example.txt&mode=view
-     *    - Returns JSON: { content: "file contents..." }
-     *    - Used by "Show Content" button
-     *    - $.api displays content in result area
-     *
-     * 2. DOWNLOAD (mode=download)
-     *    - GET /download?filename=example.txt&mode=download
-     *    - Returns fpassthru (actual file download)
-     *    - Used by "Download File" button
-     *    - window.location triggers browser download
-     *
-     * BENEFITS:
-     * - Simple: one parameter controls behavior
-     * - Clear: explicit mode in URL
-     * - Flexible: two buttons for different actions
-     *
-     * @param {string} controller - Controller name (File)
-     * @param {string} action - Action name (download)
+     * @param {string} controller - Controller name
+     * @param {string} action - Action name
      * @param {jQuery} $btn - Button element
      */
     downloadFile(controller, action, $btn) {
-        // WHY: Check button data attribute to determine mode
         const mode = $btn.data('mode') || 'view';
-
-        // Show loading indicator
         $btn.addClass('loading disabled');
 
-        // WHY: Build API URL with filename and mode parameters
         const url = `/pbxcore/api/module-example-rest-api-v2/${action}?filename=example.txt&mode=${mode}`;
 
         if (mode === 'download') {
-            // MODE: DOWNLOAD - Use fetch() + Blob for authenticated download
-            // WHY: window.location cannot send Authorization headers
-            // fetch() allows Bearer token authentication for file downloads
-            // Same pattern as Core's sound-files-index-player.js
-
-            // WHY: Build full URL
-            const fullUrl = url.startsWith('http') ? url : `${globalRootUrl}${url.replace(/^\//, '')}`;
-
-            // WHY: Prepare headers with Bearer token for authentication
-            const headers = {
-                'X-Requested-With': 'XMLHttpRequest'
-            };
-
-            // WHY: Add Bearer token if TokenManager is available (API v3 auth)
-            if (typeof TokenManager !== 'undefined' && TokenManager.accessToken) {
-                headers['Authorization'] = `Bearer ${TokenManager.accessToken}`;
-            }
-
-            // WHY: Fetch file with authentication
-            fetch(fullUrl, { headers })
-                .then(response => {
-                    // WHY: Check HTTP status
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    // WHY: Extract filename from URL parameters
-                    const urlParams = new URLSearchParams(url.split('?')[1]);
-                    const filename = urlParams.get('filename') || 'download.txt';
-
-                    // WHY: Create temporary download link with blob URL
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-
-                    // WHY: Clean up blob URL to free memory
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-
-                    // WHY: Show success message
-                    ModuleRestAPIv2.showResponse({
-                        result: true,
-                        message: 'File downloaded successfully',
-                        approach: 'Download mode (fetch + Blob)',
-                        filename: filename
-                    }, 'success');
-                })
-                .catch(error => {
-                    // WHY: Handle errors (network, auth, etc.)
-                    ModuleRestAPIv2.showResponse(
-                        { error: error.message || 'Download failed' },
-                        'error'
-                    );
-                })
-                .finally(() => {
-                    // WHY: Always remove loading state
-                    $btn.removeClass('loading disabled');
-                });
-        } else {
-            // MODE: VIEW (default) - Use $.api to get and display content
-            // WHY: $.api provides callbacks for error handling
+            // Get download URL from backend, then redirect browser
             $.api({
                 url: url,
                 method: 'GET',
                 on: 'now',
                 onSuccess(response) {
-                    // WHY: Check response format
-                    if (response && response.result && response.data) {
-                        // WHY: Display file content in result area
+                    if (response && response.result && response.data && response.data.filename) {
+                        window.location.href = response.data.filename;
                         ModuleRestAPIv2.showResponse({
                             result: true,
-                            filename: response.data.filename,
-                            size: response.data.size,
-                            content: response.data.content,
-                            approach: response.data.approach
+                            message: 'File download started',
+                            downloadUrl: response.data.filename
                         }, 'success');
                     } else {
-                        // WHY: Handle unexpected response format
                         ModuleRestAPIv2.showResponse(
-                            { error: 'Invalid response format from server' },
+                            { error: 'Invalid response: missing download URL' },
                             'error'
                         );
                     }
                 },
                 onFailure(response) {
-                    // WHY: Handle HTTP errors (400, 404, 500, etc.)
                     ModuleRestAPIv2.showResponse(
                         { error: response.statusText || 'Request failed' },
                         'error'
                     );
                 },
                 onError(errorMessage) {
-                    // WHY: Handle network errors (connection refused, timeout, etc.)
                     ModuleRestAPIv2.showResponse({ error: errorMessage }, 'error');
                 },
                 onComplete() {
-                    // WHY: Always remove loading state, even if error occurs
+                    $btn.removeClass('loading disabled');
+                },
+            });
+        } else {
+            // View mode: display file content as JSON
+            $.api({
+                url: url,
+                method: 'GET',
+                on: 'now',
+                onSuccess(response) {
+                    if (response && response.result && response.data) {
+                        ModuleRestAPIv2.showResponse({
+                            result: true,
+                            filename: response.data.filename,
+                            size: response.data.size,
+                            content: response.data.content
+                        }, 'success');
+                    } else {
+                        ModuleRestAPIv2.showResponse(
+                            { error: 'Invalid response format' },
+                            'error'
+                        );
+                    }
+                },
+                onFailure(response) {
+                    ModuleRestAPIv2.showResponse(
+                        { error: response.statusText || 'Request failed' },
+                        'error'
+                    );
+                },
+                onError(errorMessage) {
+                    ModuleRestAPIv2.showResponse({ error: errorMessage }, 'error');
+                },
+                onComplete() {
                     $btn.removeClass('loading disabled');
                 },
             });
@@ -307,9 +200,7 @@ const ModuleRestAPIv2 = {
     },
 
     /**
-     * Display API response with color coding
-     *
-     * WHY: Pretty format JSON response with syntax highlighting and security
+     * Display API response.
      *
      * @param {Object|string} response - API response
      * @param {string} type - Message type (success, error)
@@ -318,15 +209,12 @@ const ModuleRestAPIv2 = {
         const $container = $('#api-response-v2').parent();
         const $response = $('#api-response-v2');
 
-        // Format JSON with indentation
         const formattedResponse = typeof response === 'string'
             ? response
             : JSON.stringify(response, null, 2);
 
-        // WHY: Use escapeHtml to prevent XSS attacks
         $response.html(`<code class="language-json">${ModuleRestAPIv2.escapeHtml(formattedResponse)}</code>`);
 
-        // Apply color scheme based on type
         $container.removeClass('ui positive negative message');
         if (type === 'success') {
             $container.addClass('ui positive message');
@@ -336,9 +224,7 @@ const ModuleRestAPIv2 = {
     },
 
     /**
-     * Escape HTML
-     *
-     * WHY: Security - prevent XSS attacks
+     * Escape HTML to prevent XSS.
      *
      * @param {string} text - Text to escape
      * @return {string} Escaped text
@@ -355,9 +241,4 @@ const ModuleRestAPIv2 = {
     },
 };
 
-/**
- * Initialize on page load
- *
- * WHY: Start module after DOM is fully loaded
- */
 $(document).ready(() => ModuleRestAPIv2.initialize());

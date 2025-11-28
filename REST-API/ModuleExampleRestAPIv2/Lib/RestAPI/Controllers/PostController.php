@@ -25,60 +25,37 @@ use MikoPBX\PBXCoreREST\Controllers\Modules\ModulesControllerBase;
 use Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\ModuleRestAPIProcessor;
 
 /**
- * PostController - Backend (Worker) approach for POST operations
+ * Controller for POST requests.
  *
- * SIMPLIFIED ARCHITECTURE:
- * All write operations delegated to backend worker via ACTION_MAP.
- * No private methods - clean mapping from URL action to backend processor action.
- *
- * AVAILABLE ACTIONS:
- * - create: Create new user (CreateUserAction)
- * - update: Update existing user (UpdateUserAction)
- * - delete: Delete user (DeleteUserAction)
- *
- * ADDING NEW ACTIONS:
- * Just add to ACTION_MAP - no need for new methods!
+ * Available actions: create, update, delete
+ * All operations delegated to backend worker via ModuleRestAPIProcessor.
  *
  * @package Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Controllers
  */
 class PostController extends ModulesControllerBase
 {
     /**
-     * Action mapping: URL action => Backend processor action
-     *
-     * WHY: Single source of truth for action routing
-     * Adding new action = add one line to this map
+     * URL action => processor action mapping.
      */
     private const ACTION_MAP = [
-        'create' => 'createUser',  // CreateUserAction::main()
-        'update' => 'updateUser',  // UpdateUserAction::main()
-        'delete' => 'deleteUser',  // DeleteUserAction::main()
+        'create' => 'createUser',
+        'update' => 'updateUser',
+        'delete' => 'deleteUser',
     ];
 
     /**
-     * Route actions to backend worker
-     *
-     * WHY: Simplified routing - no private methods needed
-     * All actions delegated to backend worker via ACTION_MAP
-     *
-     * EXAMPLE REQUESTS:
-     * curl -X POST 'http://127.0.0.1/pbxcore/api/module-example-rest-api-v2/create' -d 'name=John Doe&role=admin'
-     * curl -X POST 'http://127.0.0.1/pbxcore/api/module-example-rest-api-v2/update' -d 'id=123&name=Jane Doe'
-     * curl -X POST 'http://127.0.0.1/pbxcore/api/module-example-rest-api-v2/delete' -d 'id=123'
+     * Route action to backend worker.
      *
      * @param string $actionName Action name from URL
-     * @return void
      */
     public function callAction(string $actionName): void
     {
-        // Validate action exists
         if (!isset(self::ACTION_MAP[$actionName])) {
             $this->response->setPayloadError("Unknown action: {$actionName}");
             $this->response->send();
             return;
         }
 
-        // Send request to backend worker
         $this->sendRequestToBackendWorker(
             ModuleRestAPIProcessor::class,
             self::ACTION_MAP[$actionName],

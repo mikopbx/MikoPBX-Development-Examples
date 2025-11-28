@@ -25,68 +25,19 @@ use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
 use Phalcon\Di\Injectable;
 
 /**
- * DeleteUserAction - Delete user via backend worker
+ * Delete user action (demonstration).
  *
- * BACKEND (Worker via Processor):
- * This action demonstrates user deletion with cascading operations and audit logging.
- *
- * WHY BACKEND:
- * - Database write operation (transaction with cascading deletes)
- * - Validation before deletion (user exists, no active dependencies)
- * - Cascading operations (delete extensions, SIP accounts, permissions)
- * - Audit logging (preserve deletion record for compliance)
- * - Optional archival (backup user data before deletion)
- * - Non-blocking operation
- *
- * WHAT THIS ACTION DOES:
- * - Validates user exists in database
- * - Checks for active dependencies (ongoing calls, owned resources)
- * - Archives user data for compliance/recovery
- * - Begins database transaction
- * - Deletes related records (extensions, SIP accounts, permissions, call history)
- * - Deletes user record
- * - Commits transaction
- * - Logs deletion in audit table
- * - Returns deletion confirmation
- *
- * PERFORMANCE: ~50-100ms (depends on amount of related data to delete)
- *
- * REAL WORLD USE CASE:
- * - Admin removes terminated employee from system
- * - Bulk user cleanup operations
- * - User account deactivation/deletion workflow
- * - GDPR compliance (right to be forgotten)
- *
- * REQUEST STRUCTURE:
- * [
- *     'action' => 'deleteUser',
- *     'data' => [
- *         'id' => 123,
- *         'archive' => true,   // Optional: archive before delete
- *     ]
- * ]
- *
- * RESPONSE:
- * PBXApiResult with:
- * - success: true/false
- * - data: deletion confirmation
- * - processor: __METHOD__ for debugging
- * - httpCode: 200 OK
+ * In real implementation would delete user with cascading operations.
  *
  * @package Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\Actions
  */
 class DeleteUserAction extends Injectable
 {
     /**
-     * Delete user with cascading operations
+     * Delete user.
      *
-     * WHY STATIC METHOD:
-     * - Called by processor without instantiation
-     * - Same pattern as CORE actions
-     * - No state needed, just delete user and return result
-     *
-     * @param array $request Request data from processor
-     * @return PBXApiResult An object containing the result of the API call
+     * @param array $request Request with 'data' containing 'id'
+     * @return PBXApiResult
      */
     public static function main(array $request): PBXApiResult
     {
@@ -94,10 +45,8 @@ class DeleteUserAction extends Injectable
         $res->processor = __METHOD__;
 
         try {
-            // WHY: Extract request data
             $data = $request['data'] ?? [];
 
-            // WHY: Validate required fields
             if (empty($data['id'])) {
                 $res->success = false;
                 $res->messages['error'][] = 'User ID is required';
@@ -105,56 +54,18 @@ class DeleteUserAction extends Injectable
             }
 
             $userId = (int)$data['id'];
-            $shouldArchive = !empty($data['archive']);
 
-            // WHY: In real implementation, you would:
-            // 1. Query database to check if user exists
-            // 2. If not exists, return 404 error
-            // 3. Check for active dependencies:
-            //    - Active calls for user's extensions
-            //    - Owned resources (conference rooms, IVR menus)
-            //    - Scheduled callbacks
-            // 4. If dependencies exist, return error or force delete
-            // 5. Archive user data if requested:
-            //    - Export user settings to JSON
-            //    - Copy to archive table
-            //    - Store in file for backup
-            // 6. Begin database transaction
-            // 7. Delete related records in order:
-            //    - Extensions (CASCADE will delete SIP accounts)
-            //    - Permissions
-            //    - Call history (optional, or just NULL the user_id)
-            //    - User preferences
-            // 8. Delete user record
-            // 9. Commit transaction
-            // 10. Log deletion in audit table with timestamp and admin who deleted
-
-            // For demonstration, we'll simulate user deletion
-            $deletedRecords = [
-                'extensions' => rand(1, 5),
-                'permissions' => rand(5, 15),
-                'preferences' => 1,
-            ];
-
+            // Demonstration: simulate user deletion
             $res->success = true;
-            $res->httpCode = 200; // OK
             $res->data = [
-                'approach' => 'Backend (Worker via Processor + Action)',
-                'processor_class' => 'ModuleRestAPIProcessor',
-                'action_class' => __CLASS__,
-                'operation' => 'DELETE',
                 'user' => [
                     'id' => $userId,
                     'deleted_at' => date('Y-m-d H:i:s'),
                 ],
-                'cascading_deletes' => $deletedRecords,
-                'total_records_deleted' => array_sum($deletedRecords) + 1, // +1 for user itself
-                'archived' => $shouldArchive,
-                'message' => 'User deleted successfully with all related data',
+                'message' => 'User deleted successfully',
             ];
 
         } catch (\Throwable $e) {
-            // WHY: Proper error handling for production
             $res->success = false;
             $res->messages['error'][] = 'Failed to delete user: ' . $e->getMessage();
         }
