@@ -87,6 +87,12 @@ const ModuleRestAPIv3 = {
             ModuleRestAPIv3.testApi(method, path, $btn);
         });
 
+        // Initialize PUBLIC endpoint test button
+        $('.test-public-status').on('click', (e) => {
+            const $btn = $(e.currentTarget);
+            ModuleRestAPIv3.testPublicEndpoint($btn);
+        });
+
         // Initialize file upload using FilesAPI.attachToBtn (like sound files, modules, etc.)
         ModuleRestAPIv3.initializeFileUpload();
 
@@ -147,6 +153,40 @@ const ModuleRestAPIv3 = {
         }, true);
 
         ModuleRestAPIv3.resumable = resumable;
+    },
+
+    /**
+     * Test PUBLIC endpoint (no authentication required)
+     *
+     * WHY: Demonstrates that PUBLIC endpoints work without Bearer token
+     * Uses plain fetch() instead of $.api to show it works without session
+     *
+     * @param {jQuery} $btn - Button element to show loading state
+     */
+    testPublicEndpoint($btn) {
+        $btn.addClass('loading disabled');
+
+        const url = $btn.data('path');
+
+        // WHY: Use fetch() WITHOUT Authorization header to prove it's truly public
+        // This demonstrates the endpoint works for external systems (monitoring, webhooks, etc.)
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+                // NOTE: No 'Authorization' header - this is PUBLIC!
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            ModuleRestAPIv3.showResponse(data, data.result ? 'success' : 'error');
+        })
+        .catch(error => {
+            ModuleRestAPIv3.showResponse({ error: error.message }, 'error');
+        })
+        .finally(() => {
+            $btn.removeClass('loading disabled');
+        });
     },
 
     /**

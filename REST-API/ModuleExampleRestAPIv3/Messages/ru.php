@@ -3,7 +3,7 @@ return [
     'module_rest_api_v3' => 'Пример: REST API v3',
     'module_rest_api_v3_description' => 'Pattern 3 (Авто-обнаружение) - современный REST API v3 с OpenAPI, автоматическим обнаружением контроллеров и валидацией',
     'SubHeaderModuleExampleRestAPIv3' => 'Pattern 3 (Авто-обнаружение) - рекомендуемый подход с автоматическим обнаружением контроллеров через PHP 8 атрибуты, генерацией OpenAPI 3.1 схем и архитектурой Processor+Actions',
-    'BreadcrumbModuleExampleRestAPIv3' => 'REST API v3 Example',
+    'BreadcrumbModuleExampleRestAPIv3' => 'REST API v3 - пример',
 
     // Перевод тега REST API
     'rest_tag_ModuleExampleRESTAPIV3Tasks' => 'Модуль Example REST API v3 - Задачи',
@@ -49,4 +49,26 @@ return [
     // Сообщения ответов REST API
     'rest_response_201_uploaded' => 'Файл успешно загружен',
     'rest_response_413_too_large' => 'Файл слишком большой (максимум 10МБ)',
+
+    // Переводы публичного endpoint Status
+    'rest_tag_ModuleExampleRESTAPIV3Status' => 'Модуль Example REST API v3 - Публичный статус',
+    'rest_status_GetStatus' => 'Получить статус модуля',
+    'rest_status_GetStatusDesc' => 'Возвращает информацию о статусе модуля. Это ПУБЛИЧНЫЙ endpoint - аутентификация не требуется.',
+    'rest_response_200_status' => 'Статус модуля успешно получен',
+
+    // Описания полей схемы Status
+    'rest_schema_status_moduleName' => 'Уникальный идентификатор модуля',
+    'rest_schema_status_moduleVersion' => 'Номер версии модуля',
+    'rest_schema_status_status' => 'Статус работы модуля (ok, degraded, error)',
+    'rest_schema_status_timestamp' => 'Текущая временная метка сервера',
+    'rest_schema_status_message' => 'Человекочитаемое сообщение о статусе',
+
+    // UI - Секция публичного endpoint
+    'mod_restapiv3_PublicEndpointTitle' => 'Публичный Endpoint (Без Аутентификации)',
+    'mod_restapiv3_PublicEndpointDesc' => 'Этот модуль демонстрирует создание ПУБЛИЧНЫХ REST API endpoints, доступных без аутентификации.',
+    'mod_restapiv3_PublicEndpointUsage1' => 'Health-check для систем мониторинга',
+    'mod_restapiv3_PublicEndpointUsage2' => 'Webhook-приёмники (callback платежей, SMS-уведомления)',
+    'mod_restapiv3_PublicEndpointUsage3' => 'OAuth2 callbacks и публичная информация API',
+    'mod_restapiv3_TestPublicEndpoint' => 'Тест публичного Endpoint',
+    'mod_restapiv3_PublicEndpointHowItWorks' => 'Как это работает: добавьте атрибут #[ResourceSecurity(..., requirements: [SecurityType::PUBLIC])] к классу контроллера. Endpoint будет автоматически зарегистрирован как публичный при обнаружении маршрутов.',
 ];

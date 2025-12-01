@@ -24,7 +24,7 @@ return [
     'module_rest_api_v1' => 'Example: REST API v1',
     'module_rest_api_v1_description' => 'Demonstrates Pattern 1 (Simple Callback) - the simplest approach',
     'SubHeaderModuleExampleRestAPIv1' => 'Demonstrates Pattern 1 (Simple Callback) - the simplest approach for module REST API integration',
-
+    'BreadcrumbModuleExampleRestAPIv1' => 'REST API v1 - example',
     /**
      * Settings
      */

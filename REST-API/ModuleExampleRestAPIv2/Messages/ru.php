@@ -4,7 +4,7 @@ return [
     'module_rest_api_v2' => 'Пример: REST API v2',
     'module_rest_api_v2_description' => 'REST API с архитектурой фонового воркера',
     'SubHeaderModuleExampleRestAPIv2' => 'Демонстрация реализации REST API с асинхронной обработкой в фоновом процессе',
-    'BreadcrumbModuleExampleRestAPIv2' => 'Пример REST API v2',
+    'BreadcrumbModuleExampleRestAPIv2' => 'REST API v2 - пример',
 
     // Test interface
     'mod_restapi2_InfoTitle' => 'Архитектура фонового воркера',

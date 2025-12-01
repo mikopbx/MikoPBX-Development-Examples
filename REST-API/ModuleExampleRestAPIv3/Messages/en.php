@@ -3,7 +3,7 @@ return [
     'module_rest_api_v3' => 'Example: REST API v3',
     'module_rest_api_v3_description' => 'Pattern 3 (Auto-Discovery) - modern REST API v3 with OpenAPI, automatic controller discovery, and validation',
     'SubHeaderModuleExampleRestAPIv3' => 'Pattern 3 (Auto-Discovery) - recommended approach with automatic controller discovery via PHP 8 attributes, OpenAPI 3.1 schema generation, and Processor+Actions architecture',
-    'BreadcrumbModuleExampleRestAPIv3' => 'REST API v3 Example',
+    'BreadcrumbModuleExampleRestAPIv3' => 'REST API v3 - еxample',
 
     // REST API tag translation
     'rest_tag_ModuleExampleRESTAPIV3Tasks' => 'Module Example REST API v3 - Tasks',
@@ -49,4 +49,26 @@ return [
     // REST API response messages
     'rest_response_201_uploaded' => 'File uploaded successfully',
     'rest_response_413_too_large' => 'File too large (maximum 10MB allowed)',
+
+    // PUBLIC Status endpoint translations
+    'rest_tag_ModuleExampleRESTAPIV3Status' => 'Module Example REST API v3 - Public Status',
+    'rest_status_GetStatus' => 'Get module status',
+    'rest_status_GetStatusDesc' => 'Returns module status information. This is a PUBLIC endpoint - no authentication required.',
+    'rest_response_200_status' => 'Module status retrieved successfully',
+
+    // Status schema field descriptions
+    'rest_schema_status_moduleName' => 'Module unique identifier',
+    'rest_schema_status_moduleVersion' => 'Module version number',
+    'rest_schema_status_status' => 'Module operational status (ok, degraded, error)',
+    'rest_schema_status_timestamp' => 'Current server timestamp',
+    'rest_schema_status_message' => 'Human-readable status message',
+
+    // UI - Public endpoint section
+    'mod_restapiv3_PublicEndpointTitle' => 'Public Endpoint (No Authentication)',
+    'mod_restapiv3_PublicEndpointDesc' => 'This module demonstrates how to create PUBLIC REST API endpoints that are accessible without authentication.',
+    'mod_restapiv3_PublicEndpointUsage1' => 'Health checks and monitoring systems',
+    'mod_restapiv3_PublicEndpointUsage2' => 'Webhook receivers (payment callbacks, SMS notifications)',
+    'mod_restapiv3_PublicEndpointUsage3' => 'OAuth2 callbacks and public API info',
+    'mod_restapiv3_TestPublicEndpoint' => 'Test Public Endpoint',
+    'mod_restapiv3_PublicEndpointHowItWorks' => 'How it works: Add #[ResourceSecurity(..., requirements: [SecurityType::PUBLIC])] attribute to the controller class. The endpoint will be automatically registered as public during route discovery.',
 ];

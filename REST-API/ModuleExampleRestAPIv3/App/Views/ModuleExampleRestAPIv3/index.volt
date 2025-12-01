@@ -2,6 +2,29 @@
     <strong>OpenAPI Spec:</strong> <a href="/admin-cabinet/api-keys/openapi#/operations/getTasksList" target="_blank">View API Documentation</a>
 </div>
 
+<div class="ui green segment">
+    <h3><i class="unlock icon"></i> {{ t._('mod_restapiv3_PublicEndpointTitle') }}</h3>
+    <p>{{ t._('mod_restapiv3_PublicEndpointDesc') }}</p>
+    <div class="ui bulleted list">
+        <div class="item">{{ t._('mod_restapiv3_PublicEndpointUsage1') }}</div>
+        <div class="item">{{ t._('mod_restapiv3_PublicEndpointUsage2') }}</div>
+        <div class="item">{{ t._('mod_restapiv3_PublicEndpointUsage3') }}</div>
+    </div>
+    <div class="ui labeled button" tabindex="0">
+        <button class="ui green button test-public-status" data-method="GET" data-path="/pbxcore/api/v3/module-example-rest-api-v3/status:getStatus">
+            <i class="heartbeat icon"></i>
+            {{ t._('mod_restapiv3_TestPublicEndpoint') }}
+        </button>
+        <a class="ui basic green left pointing label" id="public-endpoint-url">
+            GET /pbxcore/api/v3/module-example-rest-api-v3/status:getStatus
+        </a>
+    </div>
+    <div class="ui mini message" style="margin-top: 1em;">
+        <i class="info circle icon"></i>
+        {{ t._('mod_restapiv3_PublicEndpointHowItWorks') }}
+    </div>
+</div>
+
 <div class="ui segment">
     <h3>CRUD Operations</h3>
     <button class="ui blue button test-v3" data-method="GET" data-path="" data-base-text="Get List">Get List</button>

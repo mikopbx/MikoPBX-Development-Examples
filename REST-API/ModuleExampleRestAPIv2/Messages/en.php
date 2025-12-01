@@ -4,7 +4,7 @@ return [
     'module_rest_api_v2' => 'Example: REST API v2',
     'module_rest_api_v2_description' => 'REST API with backend worker architecture',
     'SubHeaderModuleExampleRestAPIv2' => 'Demonstrates REST API implementation with asynchronous backend processing',
-    'BreadcrumbModuleExampleRestAPIv2' => 'REST API v2 Example',
+    'BreadcrumbModuleExampleRestAPIv2' => 'REST API v2 - example',
 
     // Test interface
     'mod_restapi2_InfoTitle' => 'Backend Worker Architecture',

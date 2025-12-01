@@ -24,7 +24,7 @@ return [
     'module_rest_api_v1' => 'Пример: REST API v1',
     'module_rest_api_v1_description' => 'Демонстрация Pattern 1 (Simple Callback) - простейший подход',
     'SubHeaderModuleExampleRestAPIv1' => 'Демонстрация Pattern 1 (Simple Callback) - простейший подход для интеграции модулей через REST API',
-
+    'BreadcrumbModuleExampleRestAPIv1' => 'REST API v1 - пример',
     /**
      * Настройки
      */
