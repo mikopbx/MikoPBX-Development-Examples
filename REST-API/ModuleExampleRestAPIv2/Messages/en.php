@@ -23,4 +23,13 @@ return [
     'mod_restapi2_BtnDeleteUser' => 'Delete User',
     'mod_restapi2_BtnShowContent' => 'Show Content',
     'mod_restapi2_BtnDownloadFile' => 'Download File',
+
+    // Public endpoint
+    'mod_restapi2_PublicEndpointTitle' => 'Public Endpoint (No Authentication)',
+    'mod_restapi2_PublicEndpointDesc' => 'This endpoint is accessible without any authentication. No Bearer token or localhost restriction required.',
+    'mod_restapi2_PublicEndpointUsage1' => 'Health check for monitoring systems',
+    'mod_restapi2_PublicEndpointUsage2' => 'Webhook receivers (payment callbacks, SMS delivery reports)',
+    'mod_restapi2_PublicEndpointUsage3' => 'OAuth2 callbacks and public status pages',
+    'mod_restapi2_TestPublicEndpoint' => 'Test Public Status',
+    'mod_restapi2_PublicEndpointHowItWorks' => 'How it works: Register route in getPBXCoreRESTAdditionalRoutes() with NoAuth=true (6th parameter). The endpoint will be accessible without any authentication.',
 ];

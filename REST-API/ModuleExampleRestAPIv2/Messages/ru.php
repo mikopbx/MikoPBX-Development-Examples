@@ -23,4 +23,13 @@ return [
     'mod_restapi2_BtnDeleteUser' => 'Удалить пользователя',
     'mod_restapi2_BtnShowContent' => 'Показать содержимое',
     'mod_restapi2_BtnDownloadFile' => 'Скачать файл',
+
+    // Public endpoint
+    'mod_restapi2_PublicEndpointTitle' => 'Публичный endpoint (без аутентификации)',
+    'mod_restapi2_PublicEndpointDesc' => 'Этот endpoint доступен без какой-либо аутентификации. Не требуется Bearer токен или ограничение localhost.',
+    'mod_restapi2_PublicEndpointUsage1' => 'Health check для систем мониторинга',
+    'mod_restapi2_PublicEndpointUsage2' => 'Webhook приёмники (callback платежей, отчёты о доставке SMS)',
+    'mod_restapi2_PublicEndpointUsage3' => 'OAuth2 callback и публичные страницы статуса',
+    'mod_restapi2_TestPublicEndpoint' => 'Тест публичного статуса',
+    'mod_restapi2_PublicEndpointHowItWorks' => 'Как работает: зарегистрируйте маршрут в getPBXCoreRESTAdditionalRoutes() с NoAuth=true (6-й параметр). Endpoint будет доступен без какой-либо аутентификации.',
 ];

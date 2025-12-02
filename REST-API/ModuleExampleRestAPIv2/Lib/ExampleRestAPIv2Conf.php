@@ -23,15 +23,25 @@ class ExampleRestAPIv2Conf extends ConfigClass
     /**
      * Register REST API routes.
      *
-     * Routes: /pbxcore/api/module-example-rest-api-v2/{actionName}
+     * Route format: [ControllerClass, ActionMethod, RequestTemplate, HttpMethod, RootUrl, NoAuth]
      *
-     * @return array Route definitions [controller, method, path, httpMethod, prefix]
+     * Protected routes (require authentication):
+     * - GET /pbxcore/api/module-example-rest-api-v2/{actionName}
+     * - POST /pbxcore/api/module-example-rest-api-v2/{actionName}
+     *
+     * Public routes (NO authentication required):
+     * - GET /pbxcore/api/module-example-rest-api-v2/public/{actionName}
+     *
+     * @return array Route definitions
      */
     public function getPBXCoreRESTAdditionalRoutes(): array
     {
         return [
-            ['\\Modules\\ModuleExampleRestAPIv2\\Lib\\RestAPI\\Controllers\\GetController', 'callAction', '/pbxcore/api/module-example-rest-api-v2/{actionName}', 'get', ''],
-            ['\\Modules\\ModuleExampleRestAPIv2\\Lib\\RestAPI\\Controllers\\PostController', 'callAction', '/pbxcore/api/module-example-rest-api-v2/{actionName}', 'post', ''],
+            // Protected routes (NoAuth = false, default)
+            ['\\Modules\\ModuleExampleRestAPIv2\\Lib\\RestAPI\\Controllers\\GetController', 'callAction', '/pbxcore/api/module-example-rest-api-v2/{actionName}', 'get', '', false],
+            ['\\Modules\\ModuleExampleRestAPIv2\\Lib\\RestAPI\\Controllers\\PostController', 'callAction', '/pbxcore/api/module-example-rest-api-v2/{actionName}', 'post', '', false],
+            // Public route (NoAuth = true) - no authentication required
+            ['\\Modules\\ModuleExampleRestAPIv2\\Lib\\RestAPI\\Controllers\\PublicGetController', 'callAction', '/pbxcore/api/module-example-rest-api-v2/public/{actionName}', 'get', '', true],
         ];
     }
 }

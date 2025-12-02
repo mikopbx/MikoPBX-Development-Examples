@@ -28,6 +28,7 @@ use Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\Actions\DownloadFileActio
 use Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\Actions\CreateUserAction;
 use Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\Actions\UpdateUserAction;
 use Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\Actions\DeleteUserAction;
+use Modules\ModuleExampleRestAPIv2\Lib\RestAPI\Backend\Actions\GetStatusAction;
 use Phalcon\Di\Injectable;
 
 /**
@@ -75,6 +76,10 @@ class ModuleRestAPIProcessor extends Injectable
 
             case 'deleteUser':
                 $res = DeleteUserAction::main($request);
+                break;
+
+            case 'getStatus':
+                $res = GetStatusAction::main($request);
                 break;
 
             default:

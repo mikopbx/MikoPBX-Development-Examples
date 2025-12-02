@@ -46,6 +46,45 @@ const ModuleRestAPIv2 = {
                 ModuleRestAPIv2.testApi(controller, action, $btn);
             }
         });
+
+        // Public endpoint test button
+        $('.test-public-status').on('click', (e) => {
+            const $btn = $(e.currentTarget);
+            ModuleRestAPIv2.testPublicEndpoint($btn);
+        });
+    },
+
+    /**
+     * Test PUBLIC endpoint (no authentication required).
+     *
+     * @param {jQuery} $btn - Button element
+     */
+    testPublicEndpoint($btn) {
+        $btn.addClass('loading disabled');
+
+        const url = '/pbxcore/api/module-example-rest-api-v2/public/status';
+
+        $.api({
+            url: url,
+            method: 'GET',
+            on: 'now',
+            onSuccess(response) {
+                const isSuccess = response.result === true;
+                ModuleRestAPIv2.showResponse(response, isSuccess ? 'success' : 'error');
+            },
+            onFailure(response) {
+                ModuleRestAPIv2.showResponse(
+                    { error: response.statusText || 'Request failed' },
+                    'error'
+                );
+            },
+            onError(errorMessage) {
+                ModuleRestAPIv2.showResponse({ error: errorMessage }, 'error');
+            },
+            onComplete() {
+                $btn.removeClass('loading disabled');
+            },
+        });
     },
 
     /**
