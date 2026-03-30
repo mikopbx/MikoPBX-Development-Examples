@@ -72,10 +72,7 @@ jobs:
           gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
 
           # Create new release with all ZIPs
-          gh release create "$TAG" artifacts/*.zip \
-            --title "Latest Module Examples" \
-            --notes "$(cat <<'NOTES'
-          ## Module Examples (auto-updated on every push to master)
+          NOTES="## Module Examples (auto-updated on every push to master)
 
           Download ready-to-install ZIP files for MikoPBX:
 
@@ -97,9 +94,11 @@ jobs:
           4. Enable the module
 
           ---
-          Last build: ${COMMIT_MSG}
-          NOTES
-          )" \
+          Last build: ${COMMIT_MSG}"
+
+          gh release create "$TAG" artifacts/*.zip \
+            --title "Latest Module Examples" \
+            --notes "$NOTES" \
             --latest
 
       - name: Generate changelog
