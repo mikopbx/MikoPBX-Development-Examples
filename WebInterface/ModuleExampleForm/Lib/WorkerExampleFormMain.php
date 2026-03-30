@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +22,6 @@
 
 namespace Modules\ModuleExampleForm\Lib;
 
-
 use MikoPBX\Common\Handlers\CriticalErrorsHandler;
 use MikoPBX\Core\System\BeanstalkClient;
 use MikoPBX\Core\Workers\WorkerBase;
@@ -27,17 +29,17 @@ use MikoPBX\Core\Workers\WorkerBase;
 require_once 'Globals.php';
 
 /**
- * Class ModuleExampleForm
+ * Beanstalk queue listener worker.
+ * Subscribes to a named tube and processes incoming messages.
  */
 class WorkerExampleFormMain extends WorkerBase
 {
     protected ExampleFormMain $templateMain;
 
     /**
-     * Start point for the worker.
+     * Starts the Beanstalk queue listener loop.
      *
-     * @param array $argv The command line arguments.
-     * @return void
+     * @param array $argv Command line arguments
      */
     public function start(array $argv): void
     {
@@ -51,9 +53,9 @@ class WorkerExampleFormMain extends WorkerBase
     }
 
     /**
-     * Parser for received Beanstalk message
+     * Handles incoming Beanstalk messages.
      *
-     * @param BeanstalkClient $message
+     * @param BeanstalkClient $message Beanstalk message wrapper
      */
     public function beanstalkCallback(BeanstalkClient $message): void
     {

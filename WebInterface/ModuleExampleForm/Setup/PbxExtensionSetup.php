@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +24,6 @@ namespace Modules\ModuleExampleForm\Setup;
 
 use MikoPBX\Modules\Setup\PbxExtensionSetupBase;
 
-/**
- * Class PbxExtensionSetup
- * Module installer and uninstaller
- *
- * @package Modules\ModuleExampleForm\Setup
- */
 class PbxExtensionSetup extends PbxExtensionSetupBase
 {
-
-
 }

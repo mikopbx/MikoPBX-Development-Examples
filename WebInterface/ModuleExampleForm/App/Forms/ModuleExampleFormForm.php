@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,71 +23,82 @@
 namespace Modules\ModuleExampleForm\App\Forms;
 
 use MikoPBX\AdminCabinet\Forms\BaseForm;
-use Phalcon\Forms\Element\Text;
+use Phalcon\Forms\Element\Hidden;
 use Phalcon\Forms\Element\Numeric;
 use Phalcon\Forms\Element\Password;
-use Phalcon\Forms\Element\Check;
-use Phalcon\Forms\Element\Hidden;
-use Phalcon\Forms\Element\Select;
+use Phalcon\Forms\Element\Text;
 
+/**
+ * ModuleExampleFormForm — demonstrates all available form element types.
+ *
+ * Available elements from BaseForm:
+ *   - Text                — simple text input
+ *   - Password            — masked input
+ *   - Numeric             — number-only input
+ *   - Hidden              — invisible field for JS-managed data
+ *   - addTextArea()       — multi-line text with auto-height
+ *   - addCheckBox()       — checkbox / toggle switch
+ *   - addSemanticUIDropdown() — dropdown with static or API-loaded options
+ *
+ * @package Modules\ModuleExampleForm\App\Forms
+ */
 class ModuleExampleFormForm extends BaseForm
 {
-
-    public function initialize($entity = null, $options = null) :void
+    public function initialize($entity = null, $options = null): void
     {
+        parent::initialize($entity, $options);
 
-        // id
+        // Hidden primary key — always present, never shown to the user
         $this->add(new Hidden('id', ['value' => $entity->id]));
 
-        // text_field
+        // --- Text input ---
         $this->add(new Text('text_field'));
 
-        // text_area_field
-        $this->addTextArea('text_area_field',$entity->text_area_field??'',90,
-            ['placeholder' => 'There is placeholder text']
+        // --- TextArea with placeholder and auto-height calculation ---
+        $this->addTextArea(
+            'text_area_field',
+            $entity->text_area_field ?? '',
+            90,
+            ['placeholder' => "Line 1 of placeholder\nLine 2 shows auto-height"]
         );
 
-        // password_field
+        // --- Password input ---
         $this->add(new Password('password_field'));
 
-        // integer_field
+        // --- Numeric input with maxlength and fixed width ---
         $this->add(new Numeric('integer_field', [
-            'maxlength'    => 2,
-            'style'        => 'width: 80px;',
+            'maxlength'    => 4,
+            'style'        => 'width: 100px;',
             'defaultValue' => 3,
         ]));
 
+        // --- Checkbox (standard) ---
+        // Rendered in Volt as <div class="ui checkbox"> ... </div>
         $this->addCheckBox('checkbox_field', intval($entity->checkbox_field) === 1);
 
+        // --- Toggle (same PHP element, different Volt CSS class) ---
+        // Rendered in Volt as <div class="ui toggle checkbox"> ... </div>
         $this->addCheckBox('toggle_field', intval($entity->toggle_field) === 1);
 
-        // dropdown_field
-        $providers = new Select('dropdown_field', $options['providers'], [
-            'using'    => [
-                'id',
-                'name',
-            ],
-            'useEmpty' => false,
-            'class'    => 'ui selection dropdown provider-select',
-        ]);
-        $this->add($providers);
-    }
+        // --- SemanticUIDropdown with static options ---
+        // Options array passed from controller: ['value' => 'Display Text', ...]
+        $this->addSemanticUIDropdown(
+            'select_field',
+            $options['priorities'] ?? [],
+            $entity->select_field ?? 'medium',
+            ['placeholder' => $options['selectPlaceholder'] ?? '']
+        );
 
-    /**
-     * Adds a checkbox to the form field with the given name.
-     * Can be deleted if the module depends on MikoPBX later than 2024.3.0
-     *
-     * @param string $fieldName The name of the form field.
-     * @param bool $checked Indicates whether the checkbox is checked by default.
-     * @param string $checkedValue The value assigned to the checkbox when it is checked.
-     * @return void
-     */
-    public function addCheckBox(string $fieldName, bool $checked, string $checkedValue = 'on'): void
-    {
-        $checkAr = ['value' => null];
-        if ($checked) {
-            $checkAr = ['checked' => $checkedValue,'value' => $checkedValue];
-        }
-        $this->add(new Check($fieldName, $checkAr));
+        // --- SemanticUIDropdown populated from database ---
+        // Provider list built in controller via Providers::find()
+        $this->addSemanticUIDropdown(
+            'provider_field',
+            $options['providers'] ?? [],
+            $entity->provider_field ?? '',
+            ['placeholder' => $options['providerPlaceholder'] ?? '']
+        );
+
+        // --- Hidden field — value set by JavaScript ---
+        $this->add(new Hidden('hidden_field', ['value' => $entity->hidden_field ?? '']));
     }
 }

@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,31 +29,18 @@ use Phalcon\Mvc\ModuleDefinitionInterface;
 
 class Module implements ModuleDefinitionInterface
 {
-
-    /**
-     * Registers an autoloader related to the module
-     *
-     * @param \Phalcon\Di\DiInterface $container
-     */
-    public function registerAutoloaders(DiInterface $container = null){
-
+    public function registerAutoloaders(?DiInterface $container = null): void
+    {
     }
 
-    /**
-     * Registers services related to the module
-     *
-     * @param \Phalcon\Di\DiInterface $container
-     */
-    public function registerServices(DiInterface $container){
+    public function registerServices(DiInterface $container): void
+    {
         $container->set('dispatcher', function () {
             $dispatcher = new Dispatcher();
-
             $eventManager = new Manager();
-
             $dispatcher->setEventsManager($eventManager);
             $dispatcher->setDefaultNamespace('Modules\ModuleExampleForm\App\Controllers\\');
             return $dispatcher;
         });
     }
-
 }

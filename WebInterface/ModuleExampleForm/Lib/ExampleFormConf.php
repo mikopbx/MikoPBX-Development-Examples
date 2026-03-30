@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,15 +29,14 @@ use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
 
 class ExampleFormConf extends ConfigClass
 {
-
     /**
-     * Receive information about mikopbx main database changes
+     * Receives information about main database changes.
      *
-     * @param mixed $data
+     * @param mixed $data Change event data with keys: model, recordId, changedFields
      */
-    public function modelsEventChangeData($data): void
+    public function modelsEventChangeData(mixed $data): void
     {
-        // f.e. if somebody changes PBXLanguage, we will restart all workers
+        // Example: restart workers when PBX language changes
         if (
             $data['model'] === PbxSettings::class
             && $data['recordId'] === 'PBXLanguage'
@@ -45,9 +47,9 @@ class ExampleFormConf extends ConfigClass
     }
 
     /**
-     * Returns module workers to start it at WorkerSafeScriptCore
+     * Returns module workers for WorkerSafeScriptsCore to supervise.
      *
-     * @return array
+     * @return array Worker definitions with type and class
      */
     public function getModuleWorkers(): array
     {
@@ -64,21 +66,20 @@ class ExampleFormConf extends ConfigClass
     }
 
     /**
-     *  Process CoreAPI requests under root rights
+     * Processes REST API callback requests under root rights.
      *
-     * @param array $request
-     *
-     * @return PBXApiResult An object containing the result of the API call.
+     * @param array $request Request data with 'action' key
+     * @return PBXApiResult API response
      */
     public function moduleRestAPICallback(array $request): PBXApiResult
     {
-        $res    = new PBXApiResult();
+        $res = new PBXApiResult();
         $res->processor = __METHOD__;
         $action = strtoupper($request['action']);
         switch ($action) {
             case 'CHECK':
                 $templateMain = new ExampleFormMain();
-                $res          = $templateMain->checkModuleWorkProperly();
+                $res = $templateMain->checkModuleWorkProperly();
                 break;
             case 'RELOAD':
                 $templateMain = new ExampleFormMain();
@@ -86,36 +87,32 @@ class ExampleFormConf extends ConfigClass
                 $res->success = true;
                 break;
             default:
-                $res->success    = false;
+                $res->success = false;
                 $res->messages[] = 'API action not found in moduleRestAPICallback ModuleExampleForm';
         }
 
         return $res;
     }
 
-
     /**
-     * Modifies the system menu.
-     * @see https://docs.mikopbx.com/mikopbx-development/module-developement/module-class#onbeforeheadermenushow
+     * Adds custom items to the sidebar menu.
      *
-     * @param array $menuItems The menu items for modifications.
-     *
-     * @return void
+     * @param array $menuItems Menu items array passed by reference
      */
-    public function onBeforeHeaderMenuShow(array &$menuItems):void
+    public function onBeforeHeaderMenuShow(array &$menuItems): void
     {
-        $menuItems['module_template_AdditionalMenuItem']=[
-            'caption'=>'module_template_AdditionalMenuItem',
-            'iconclass'=>'',
-            'submenu'=>[
-                '/module-example-form/additional-page'=>[
-                    'caption' => 'module_template_AdditionalSubMenuItem',
+        $menuItems['module_template_AdditionalMenuItem'] = [
+            'caption'  => 'module_template_AdditionalMenuItem',
+            'iconclass' => '',
+            'submenu'  => [
+                '/module-example-form/additional-page' => [
+                    'caption'  => 'module_template_AdditionalSubMenuItem',
                     'iconclass' => 'gear',
-                    'action' => 'index',
-                    'param' => '',
-                    'style' => '',
+                    'action'   => 'index',
+                    'param'    => '',
+                    'style'    => '',
                 ],
-            ]
+            ],
         ];
     }
 }

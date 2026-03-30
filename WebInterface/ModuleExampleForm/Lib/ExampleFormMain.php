@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +22,7 @@
 
 namespace Modules\ModuleExampleForm\Lib;
 
-
 use MikoPBX\Core\System\Processes;
-use MikoPBX\Core\System\Util;
 use MikoPBX\Core\Workers\Cron\WorkerSafeScriptsCore;
 use MikoPBX\Modules\PbxExtensionBase;
 use MikoPBX\Modules\PbxExtensionUtils;
@@ -30,9 +31,9 @@ use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
 class ExampleFormMain extends PbxExtensionBase
 {
     /**
-     * Process something received over AsteriskAMI
+     * Processes AMI event data received by the AMI worker.
      *
-     * @param array $parameters
+     * @param array $parameters AMI event parameters
      */
     public function processAmiMessage(array $parameters): void
     {
@@ -41,9 +42,9 @@ class ExampleFormMain extends PbxExtensionBase
     }
 
     /**
-     * Process something received over Beanstalk queue
+     * Processes Beanstalk queue message received by the queue worker.
      *
-     * @param array $parameters
+     * @param array $parameters Decoded message data
      */
     public function processBeanstalkMessage(array $parameters): void
     {
@@ -52,9 +53,9 @@ class ExampleFormMain extends PbxExtensionBase
     }
 
     /**
-     * Check something and answer over RestAPI
+     * Checks module health and returns status via REST API.
      *
-     * @return PBXApiResult An object containing the result of the API call.
+     * @return PBXApiResult API response with success status
      */
     public function checkModuleWorkProperly(): PBXApiResult
     {
@@ -65,17 +66,17 @@ class ExampleFormMain extends PbxExtensionBase
     }
 
     /**
-     * Start or restart module workers
+     * Starts or restarts all module workers.
      *
-     * @param bool $restart
+     * @param bool $restart True to force restart, false to start if not running
      */
     public function startAllServices(bool $restart = false): void
     {
         $moduleEnabled = PbxExtensionUtils::isEnabled($this->moduleUniqueId);
-        if ( ! $moduleEnabled) {
+        if (!$moduleEnabled) {
             return;
         }
-        $configClass      = new ExampleFormConf();
+        $configClass = new ExampleFormConf();
         $workersToRestart = $configClass->getModuleWorkers();
 
         if ($restart) {

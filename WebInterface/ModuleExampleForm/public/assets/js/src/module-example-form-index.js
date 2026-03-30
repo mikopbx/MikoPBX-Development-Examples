@@ -1,6 +1,6 @@
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,30 +17,29 @@
  */
 
 const ModuleExampleFormIndex = {
-	var1:'foo',
-	$var2: $('.foo'),
-	$moduleStatus: $('#status'),
-	$statusToggle: $('#module-status-toggle'),
-	$disabilityFields: $('.disability'),
-	initialize(){
-		ModuleExampleFormIndex.cbOnChangeStatusToggle();
-		window.addEventListener('ModuleStatusChanged', ModuleExampleFormIndex.cbOnChangeStatusToggle);
-	},
-	/**
-	 * Change some form elements classes depends of module status
-	 */
-	cbOnChangeStatusToggle() {
-		if (ModuleExampleFormIndex.$statusToggle.checkbox('is checked')) {
-			ModuleExampleFormIndex.$disabilityFields.removeClass('disabled');
-			ModuleExampleFormIndex.$moduleStatus.show();
-		} else {
-			ModuleExampleFormIndex.$disabilityFields.addClass('disabled');
-			ModuleExampleFormIndex.$moduleStatus.hide();
-		}
-	},
+    $moduleStatus: $('#status'),
+    $statusToggle: $('#module-status-toggle'),
+    $disabilityFields: $('.disability'),
 
+    initialize() {
+        ModuleExampleFormIndex.cbOnChangeStatusToggle();
+        window.addEventListener('ModuleStatusChanged', ModuleExampleFormIndex.cbOnChangeStatusToggle);
+    },
+
+    /**
+     * Toggles form element state depending on module enabled/disabled status.
+     */
+    cbOnChangeStatusToggle() {
+        if (ModuleExampleFormIndex.$statusToggle.checkbox('is checked')) {
+            ModuleExampleFormIndex.$disabilityFields.removeClass('disabled');
+            ModuleExampleFormIndex.$moduleStatus.show();
+        } else {
+            ModuleExampleFormIndex.$disabilityFields.addClass('disabled');
+            ModuleExampleFormIndex.$moduleStatus.hide();
+        }
+    },
 };
 
 $(document).ready(() => {
-	ModuleExampleFormIndex.initialize();
+    ModuleExampleFormIndex.initialize();
 });

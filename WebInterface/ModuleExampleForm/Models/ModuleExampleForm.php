@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +26,19 @@ use MikoPBX\Common\Models\Providers;
 use MikoPBX\Modules\Models\ModulesModelsBase;
 use Phalcon\Mvc\Model\Relation;
 
+/**
+ * ModuleExampleForm — example model demonstrating all common column types.
+ *
+ * Each property maps to a column in the m_ModuleExampleForm SQLite table.
+ * Phalcon model properties follow Phalcon/SQLite conventions:
+ *   - Primary key is always untyped: public $id;
+ *   - String columns: public ?string $name = '';
+ *   - Integer columns stored as string: public ?string $enabled = '0';
+ *
+ * @package Modules\ModuleExampleForm\Models
+ */
 class ModuleExampleForm extends ModulesModelsBase
 {
-
     /**
      * @Primary
      * @Identity
@@ -34,91 +47,104 @@ class ModuleExampleForm extends ModulesModelsBase
     public $id;
 
     /**
-     * Text field example
+     * Text input field example.
      *
      * @Column(type="string", nullable=true)
      */
-    public $text_field;
+    public ?string $text_field = '';
 
     /**
-     * TextArea field example
+     * TextArea field example.
      *
      * @Column(type="string", nullable=true)
      */
-    public $text_area_field;
+    public ?string $text_area_field = '';
 
     /**
-     * Password field example
+     * Password field example.
      *
      * @Column(type="string", nullable=true)
      */
-    public $password_field;
+    public ?string $password_field = '';
 
     /**
-     * Integer field example
+     * Numeric (integer) field example.
+     *
+     * @Column(type="integer", default="3", nullable=true)
+     */
+    public ?string $integer_field = '3';
+
+    /**
+     * Checkbox field example (stored as '0' or '1').
      *
      * @Column(type="integer", default="1", nullable=true)
      */
-    public $integer_field;
+    public ?string $checkbox_field = '1';
 
     /**
-     * CheckBox
+     * Toggle field example (stored as '0' or '1').
      *
      * @Column(type="integer", default="1", nullable=true)
      */
-    public $checkbox_field;
+    public ?string $toggle_field = '1';
 
     /**
-     * Toggle
-     *
-     * @Column(type="integer", default="1", nullable=true)
-     */
-    public $toggle_field;
-
-    /**
-     * Dropdown menu
+     * Static dropdown — stores selected option value.
+     * Rendered as SemanticUIDropdown with hardcoded options (priority levels).
      *
      * @Column(type="string", nullable=true)
      */
-    public $dropdown_field;
+    public ?string $select_field = 'medium';
 
     /**
-     * Returns dynamic relations between module models and common models
-     * MikoPBX check it in ModelsBase after every call to keep data consistent
+     * Provider dropdown — foreign key to Providers table.
+     * Rendered as SemanticUIDropdown populated from database query.
      *
-     * There is example to describe the relation between Providers and ModuleExampleForm models
+     * @Column(type="string", nullable=true)
+     */
+    public ?string $provider_field = '';
+
+    /**
+     * Hidden field — stores data set programmatically via JavaScript.
      *
-     * It is important to duplicate the relation alias on message field after Models\ word
+     * @Column(type="string", nullable=true)
+     */
+    public ?string $hidden_field = '';
+
+    /**
+     * Returns dynamic relations between module models and common models.
+     * MikoPBX checks it in ModelsBase after every call to keep data consistent.
      *
-     * @param $calledModelObject
+     * Uncomment to enforce referential integrity: if a Provider is deleted,
+     * MikoPBX will block deletion when this module references it.
      *
+     * @param mixed $calledModelObject
      * @return void
      */
     public static function getDynamicRelations(&$calledModelObject): void
     {
-//        if (is_a($calledModelObject, Providers::class)) {
-//            $calledModelObject->belongsTo(
-//                'id',
-//                ModuleExampleForm::class,
-//                'dropdown_field',
-//                [
-//                    'alias'      => 'ModuleExampleFormProvider',
-//                    'foreignKey' => [
-//                        'allowNulls' => 0,
-//                        'message'    => 'Models\ModuleExampleFormProvider',
-//                        'action'     => Relation::ACTION_RESTRICT
-//
-//                    ],
-//                ]
-//            );
-//        }
+        // if (is_a($calledModelObject, Providers::class)) {
+        //     $calledModelObject->belongsTo(
+        //         'id',
+        //         ModuleExampleForm::class,
+        //         'provider_field',
+        //         [
+        //             'alias'      => 'ModuleExampleFormProvider',
+        //             'foreignKey' => [
+        //                 'allowNulls' => 0,
+        //                 'message'    => 'Models\ModuleExampleFormProvider',
+        //                 'action'     => Relation::ACTION_RESTRICT,
+        //             ],
+        //         ]
+        //     );
+        // }
     }
 
     public function initialize(): void
     {
         $this->setSource('m_ModuleExampleForm');
         $this->hasOne(
-            'dropdown_field',
+            'provider_field',
             Providers::class,
             'id',
             [
@@ -131,6 +157,4 @@ class ModuleExampleForm extends ModulesModelsBase
         );
         parent::initialize();
     }
-
-
 }

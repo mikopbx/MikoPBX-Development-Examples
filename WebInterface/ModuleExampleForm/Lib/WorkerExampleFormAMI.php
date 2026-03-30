@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +29,9 @@ use MikoPBX\Core\Workers\WorkerBase;
 
 require_once 'Globals.php';
 
-
 /**
- * Worker class for Template AMI.
+ * AMI event listener worker.
+ * Connects to Asterisk Manager Interface and processes UserEvent messages.
  */
 class WorkerExampleFormAMI extends WorkerBase
 {
@@ -36,20 +39,19 @@ class WorkerExampleFormAMI extends WorkerBase
     protected ExampleFormMain $templateMain;
 
     /**
-     * Starts the listener work.
-     * @param array $argv The command line arguments.
-     * @return void
+     * Starts the AMI event listener loop.
+     *
+     * @param array $argv Command line arguments
      */
     public function start(array $argv): void
     {
         $this->templateMain = new ExampleFormMain();
         $this->am = Util::getAstManager();
         $this->setFilter();
-        $this->am->addEventHandler("userevent", [$this, "callback"]);
+        $this->am->addEventHandler('userevent', [$this, 'callback']);
         while (true) {
             $result = $this->am->waitUserEvent(true);
             if ($result === []) {
-                // Need to reconnect to Asterisk AMI
                 usleep(100000);
                 $this->am = Util::getAstManager();
                 $this->setFilter();
@@ -58,40 +60,39 @@ class WorkerExampleFormAMI extends WorkerBase
     }
 
     /**
-     * Setup ami events filter
+     * Configures AMI event filters.
      *
-     * @return array
+     * @return array Filter response from AMI
      */
     private function setFilter(): array
     {
-        // Ping event to check module is allive
+        // Ping event for health check
         $pingTube = $this->makePingTubeName(self::class);
-        $params   = ['Operation' => 'Add', 'Filter' => 'UserEvent: ' . $pingTube];
+        $params = ['Operation' => 'Add', 'Filter' => 'UserEvent: ' . $pingTube];
         $this->am->sendRequestTimeout('Filter', $params);
 
-        // Interception event - it is example event. It happens when PBX receive inbound call
+        // Example: listen for Interception events on inbound calls
         $params = ['Operation' => 'Add', 'Filter' => 'UserEvent: Interception'];
         return $this->am->sendRequestTimeout('Filter', $params);
     }
 
     /**
-     * Callback processor
+     * Handles incoming AMI events.
      *
-     * @param $parameters
+     * @param array $parameters AMI event parameters
      */
-    public function callback($parameters): void
+    public function callback(array $parameters): void
     {
         if ($this->replyOnPingRequest($parameters)) {
             return;
         }
 
-        if (stripos($parameters['UserEvent'],'Interception' ) === false) {
+        if (stripos($parameters['UserEvent'], 'Interception') === false) {
             return;
         }
 
         $this->templateMain->processAmiMessage($parameters);
     }
-
 }
 
 // Start worker process

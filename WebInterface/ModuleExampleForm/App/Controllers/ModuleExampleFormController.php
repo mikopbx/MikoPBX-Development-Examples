@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * MikoPBX - free phone system for small business
- * Copyright © 2017-2023 Alexey Portnov and Nikolay Beketov
+ * Copyright © 2017-2025 Alexey Portnov and Nikolay Beketov
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,94 +21,98 @@
  */
 
 namespace Modules\ModuleExampleForm\App\Controllers;
+
 use MikoPBX\AdminCabinet\Controllers\BaseController;
 use MikoPBX\AdminCabinet\Providers\AssetProvider;
 use MikoPBX\Common\Models\Providers;
-use MikoPBX\Modules\PbxExtensionUtils;
 use Modules\ModuleExampleForm\App\Forms\ModuleExampleFormForm;
 use Modules\ModuleExampleForm\Models\ModuleExampleForm;
 
 class ModuleExampleFormController extends BaseController
 {
     private string $moduleUniqueID = 'ModuleExampleForm';
-    private string $moduleDir;
 
-    /**
-     * Basic initial class
-     */
     public function initialize(): void
     {
-        $this->moduleDir = PbxExtensionUtils::getModuleDir($this->moduleUniqueID);
-        $this->view->logoImagePath = $this->url->get().'assets/img/cache/'.$this->moduleUniqueID.'/logo.svg';
+        $this->view->logoImagePath = $this->url->get() . 'assets/img/cache/' . $this->moduleUniqueID . '/logo.svg';
         $this->view->submitMode = null;
         parent::initialize();
     }
 
     /**
-     * Renders the index page for the module.
-     *
-     * @return void
+     * Index page — shows module status and link to settings.
      */
     public function indexAction(): void
     {
         $headerCollectionCSS = $this->assets->collection(AssetProvider::HEADER_CSS);
-        $headerCollectionCSS->addCss('css/cache/'.$this->moduleUniqueID.'/module-example-form-index.css', true);
+        $headerCollectionCSS->addCss('css/cache/' . $this->moduleUniqueID . '/module-example-form-index.css', true);
 
-        // Add JavaScript files to the footer collection
         $footerCollectionJS = $this->assets->collection(AssetProvider::FOOTER_JS);
-        $footerCollectionJS->addJs('js/cache/'.$this->moduleUniqueID.'/module-example-form-index.js', true);
+        $footerCollectionJS->addJs('js/cache/' . $this->moduleUniqueID . '/module-example-form-index.js', true);
 
-        $this->view->pick('Modules/'.$this->moduleUniqueID.'/ModuleExampleForm/index');
+        $this->view->pick('Modules/' . $this->moduleUniqueID . '/ModuleExampleForm/index');
     }
 
     /**
-     * Renders the modify page for the module.
-     *
-     * @return void
+     * Modify page — renders form with all element types.
      */
     public function modifyAction(): void
     {
-        // Add JavaScript files to the footer collection
         $footerCollectionJS = $this->assets->collection(AssetProvider::FOOTER_JS);
         $footerCollectionJS
             ->addJs('js/pbx/main/form.js', true)
-            ->addJs('js/cache/'.$this->moduleUniqueID.'/module-example-form-modify.js', true);
+            ->addJs('js/cache/' . $this->moduleUniqueID . '/module-example-form-modify.js', true);
 
-        // Retrieve or create new module settings
         $settings = ModuleExampleForm::findFirst();
         if ($settings === null) {
             $settings = new ModuleExampleForm();
         }
 
-        // Create options array for form
-        $options = [];
-
-        // Retrieve providers list for form
-        $providers = Providers::find();
-        $providersList = [];
-        foreach ($providers as $provider){
-            $providersList[ $provider->uniqid ] = $provider->getRepresent();
-        }
-        $options['providers']=$providersList;
+        $options = $this->buildFormOptions();
 
         $this->view->form = new ModuleExampleFormForm($settings, $options);
-
-        $this->view->pick('Modules/'.$this->moduleUniqueID.'/ModuleExampleForm/modify');
+        $this->view->pick('Modules/' . $this->moduleUniqueID . '/ModuleExampleForm/modify');
     }
 
+    /**
+     * Builds options array for the form dropdowns.
+     *
+     * @return array Form options with dropdown data
+     */
+    private function buildFormOptions(): array
+    {
+        $options = [];
+
+        // Static dropdown options — hardcoded priority levels
+        $options['priorities'] = [
+            'low'      => $this->translation->_('module_template_PriorityLow'),
+            'medium'   => $this->translation->_('module_template_PriorityMedium'),
+            'high'     => $this->translation->_('module_template_PriorityHigh'),
+            'critical' => $this->translation->_('module_template_PriorityCritical'),
+        ];
+        $options['selectPlaceholder'] = $this->translation->_('module_template_SelectPlaceholder');
+
+        // Provider dropdown — populated from database
+        $providersList = [];
+        foreach (Providers::find() as $provider) {
+            $providersList[$provider->uniqid] = $provider->getRepresent();
+        }
+        $options['providers'] = $providersList;
+        $options['providerPlaceholder'] = $this->translation->_('module_template_ProviderPlaceholder');
+
+        return $options;
+    }
 
     /**
-     * Saves the form data to the database.
-     *
-     * @return void
+     * Saves posted form data to the database.
      */
-    public function saveAction() :void
+    public function saveAction(): void
     {
         if (!$this->request->isPost()) {
             return;
         }
         $data = $this->request->getPost();
-        $record = ModuleExampleForm::findFirstById($data['id']);
+        $record = ModuleExampleForm::findFirstById($data['id'] ?? null);
         if ($record === null) {
             $record = new ModuleExampleForm();
         }
@@ -130,21 +137,19 @@ class ModuleExampleFormController extends BaseController
             }
         }
 
-      $this->saveEntity($record);
+        $this->saveEntity($record);
     }
 
     /**
-     * Deletes a record from db.
+     * Deletes a record by ID.
      *
-     * @param string $recordId
-     * @return void
+     * @param string $recordId Record identifier
      */
     public function deleteAction(string $recordId): void
     {
         $record = ModuleExampleForm::findFirstById($recordId);
         if ($record !== null) {
-            $this->deleteEntity($record,'module-example-form/module-example-form/index');
+            $this->deleteEntity($record, 'module-example-form/module-example-form/index');
         }
     }
-
 }
