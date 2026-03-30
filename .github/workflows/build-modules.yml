@@ -7,6 +7,9 @@ on:
     types: [ published ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-zips:
     runs-on: ubuntu-latest
@@ -15,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Needed for changelog generation
+          fetch-depth: 0
 
       - name: Build module ZIPs
         run: |
@@ -24,16 +27,14 @@ jobs:
 
           echo "=== Finding modules with module.json ==="
 
-          # Find all module.json files
           find . -name "module.json" -not -path "*/.git/*" -not -path "*/node_modules/*" | while read module_json; do
             module_dir=$(dirname "$module_json")
             module_name=$(basename "$module_dir")
 
-            echo "📦 Building ZIP for: $module_name"
+            echo "Building ZIP for: $module_name"
 
             cd "$module_dir"
 
-            # Create ZIP with exclusions (README.md inside module is kept!)
             zip -r "../${module_name}.zip" . \
               -x "*.git*" \
               -x "*.DS_Store" \
@@ -45,14 +46,13 @@ jobs:
             cd - > /dev/null
           done
 
-          # Collect all ZIPs
           mkdir -p artifacts
           find . -maxdepth 3 -name "*.zip" -not -path "./artifacts/*" -exec mv {} artifacts/ \;
 
           echo "=== Built ZIPs ==="
           ls -lh artifacts/
 
-      - name: Upload artifacts (on push)
+      - name: Upload artifacts
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
@@ -60,17 +60,57 @@ jobs:
           path: artifacts/*.zip
           retention-days: 90
 
+      - name: Update latest release
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="latest"
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+
+          # Delete existing latest release if it exists
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+
+          # Create new release with all ZIPs
+          gh release create "$TAG" artifacts/*.zip \
+            --title "Latest Module Examples" \
+            --notes "$(cat <<'NOTES'
+          ## Module Examples (auto-updated on every push to master)
+
+          Download ready-to-install ZIP files for MikoPBX:
+
+          ### REST API
+          - **ModuleExampleRestAPIv1.zip** — Pattern 1: Simple Callback
+          - **ModuleExampleRestAPIv2.zip** — Pattern 2: Custom Controllers
+          - **ModuleExampleRestAPIv3.zip** — Pattern 3: Modern 2025 (recommended)
+
+          ### AMI
+          - **ModuleExampleAmi.zip** — AMI Integration Example
+
+          ### Web Interface
+          - **ModuleExampleForm.zip** — Form Elements Reference
+
+          ### Installation
+          1. Download the ZIP
+          2. Go to **Modules → Upload module** in MikoPBX admin panel
+          3. Select the ZIP file
+          4. Enable the module
+
+          ---
+          Last build: ${COMMIT_MSG}
+          NOTES
+          )" \
+            --latest
+
       - name: Generate changelog
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' && github.event.action == 'published'
         id: changelog
         run: |
-          # Get previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
           if [ -z "$PREV_TAG" ]; then
             echo "changelog=Initial release with all module examples" >> $GITHUB_OUTPUT
           else
-            # Generate changelog between tags
             CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
             echo "changelog<<EOF" >> $GITHUB_OUTPUT
             echo "$CHANGELOG" >> $GITHUB_OUTPUT
@@ -78,38 +118,32 @@ jobs:
           fi
 
       - name: Upload to release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v1
         with:
           files: artifacts/*.zip
           body: |
-            ## 📦 Available Module Examples
+            ## Available Module Examples
 
             Download ready-to-install ZIP files:
 
             ### REST API Modules
             - **ModuleExampleRestAPIv1.zip** - Pattern 1: Simple Callback
             - **ModuleExampleRestAPIv2.zip** - Pattern 2: Custom Controllers
-            - **ModuleExampleRestAPIv3.zip** - Pattern 3: Modern 2025 ⭐ Recommended
+            - **ModuleExampleRestAPIv3.zip** - Pattern 3: Modern 2025 (recommended)
 
             ### Other Modules
             - **ModuleExampleAmi.zip** - AMI Integration Example
             - **ModuleExampleForm.zip** - Web Interface Form Example
 
-            ## 📋 Changelog
+            ## Changelog
             ${{ steps.changelog.outputs.changelog }}
 
-            ## 📖 Installation
+            ## Installation
             1. Download desired module ZIP file
             2. Navigate to **Modules Marketplace** in MikoPBX
             3. Click **Upload new module**
             4. Select ZIP file
             5. Click **Turn it On**
-
-            ## 📚 Documentation
-
-            - [English README](https://github.com/mikopbx/MikoPBX-Development-Examples/blob/master/README.md)
-            - [Russian README](https://github.com/mikopbx/MikoPBX-Development-Examples/blob/master/README.ru.md)
-            - [Development Docs](https://github.com/mikopbx/DevelopementDocs)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
