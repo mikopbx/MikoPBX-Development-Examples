@@ -110,8 +110,8 @@ class Controller extends BaseRestController
     #[ApiParameterRef('orderWay', dataStructure: CommonDataStructure::class)]
     #[ApiParameterRef('status')]
     #[ApiResponse(200, 'rest_response_200_list')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function getList(): void {}
 
     /**
@@ -125,10 +125,10 @@ class Controller extends BaseRestController
         description: 'rest_tasks_GetRecordDesc',
         operationId: 'getTaskById'
     )]
-    #[ApiResponse(200, 'rest_response_200_record')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(404, 'rest_response_404')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(200, 'rest_response_200_get')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(404, 'rest_response_404_not_found')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function getRecord(): void {}
 
     /**
@@ -145,11 +145,11 @@ class Controller extends BaseRestController
     #[ApiParameterRef('title', required: true)]
     #[ApiParameterRef('status')]
     #[ApiParameterRef('priority')]
-    #[ApiResponse(201, 'rest_response_201')]
-    #[ApiResponse(400, 'rest_response_400')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(422, 'rest_response_422')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(201, 'rest_response_201_created')]
+    #[ApiResponse(400, 'rest_response_400_bad_request')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(422, 'rest_response_422_validation_error')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function create(): void {}
 
     /**
@@ -166,12 +166,12 @@ class Controller extends BaseRestController
     #[ApiParameterRef('title', required: true)]
     #[ApiParameterRef('status')]
     #[ApiParameterRef('priority')]
-    #[ApiResponse(200, 'rest_response_200_record')]
-    #[ApiResponse(400, 'rest_response_400')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(404, 'rest_response_404')]
-    #[ApiResponse(422, 'rest_response_422')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(200, 'rest_response_200_get')]
+    #[ApiResponse(400, 'rest_response_400_bad_request')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(404, 'rest_response_404_not_found')]
+    #[ApiResponse(422, 'rest_response_422_validation_error')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function update(): void {}
 
     /**
@@ -188,12 +188,12 @@ class Controller extends BaseRestController
     #[ApiParameterRef('title')]
     #[ApiParameterRef('status')]
     #[ApiParameterRef('priority')]
-    #[ApiResponse(200, 'rest_response_200_record')]
-    #[ApiResponse(400, 'rest_response_400')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(404, 'rest_response_404')]
-    #[ApiResponse(422, 'rest_response_422')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(200, 'rest_response_200_get')]
+    #[ApiResponse(400, 'rest_response_400_bad_request')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(404, 'rest_response_404_not_found')]
+    #[ApiResponse(422, 'rest_response_422_validation_error')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function patch(): void {}
 
     /**
@@ -206,10 +206,10 @@ class Controller extends BaseRestController
         description: 'rest_tasks_DeleteDesc',
         operationId: 'deleteTask'
     )]
-    #[ApiResponse(200, 'rest_response_200_delete')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(404, 'rest_response_404')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(200, 'rest_response_200_deleted')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(404, 'rest_response_404_not_found')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function delete(): void {}
 
     /**
@@ -223,9 +223,9 @@ class Controller extends BaseRestController
         description: 'rest_tasks_GetDefaultDesc',
         operationId: 'getDefaultTask'
     )]
-    #[ApiResponse(200, 'rest_response_200_record')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(200, 'rest_response_200_get')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function getDefault(): void {}
 
     /**
@@ -240,10 +240,10 @@ class Controller extends BaseRestController
     )]
     #[ApiParameterRef('filename', dataStructure: DataStructure::class, required: false)]
     #[ApiResponse(200, 'rest_response_200_file_download')]
-    #[ApiResponse(401, 'rest_response_401')]
-    #[ApiResponse(403, 'rest_response_403')]
-    #[ApiResponse(404, 'rest_response_404')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
+    #[ApiResponse(403, 'rest_response_403_forbidden')]
+    #[ApiResponse(404, 'rest_response_404_not_found')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function download(): void {}
 
     /**
@@ -273,12 +273,12 @@ class Controller extends BaseRestController
             ]
         ]
     )]
-    #[ApiResponse(200, 'rest_response_200_chunk_received')]
+    #[ApiResponse(200, 'rest_response_200_chunk_uploaded')]
     #[ApiResponse(201, 'rest_response_201_uploaded')]
     #[ApiResponse(202, 'rest_response_202_merging')]
-    #[ApiResponse(400, 'rest_response_400')]
-    #[ApiResponse(401, 'rest_response_401')]
+    #[ApiResponse(400, 'rest_response_400_bad_request')]
+    #[ApiResponse(401, 'rest_response_401_unauthorized')]
     #[ApiResponse(413, 'rest_response_413_too_large')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function uploadFile(): void {}
 }

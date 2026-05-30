@@ -48,7 +48,11 @@ return [
 
     // Сообщения ответов REST API
     'rest_response_201_uploaded' => 'Файл успешно загружен',
+    'rest_response_202_merging' => 'Части приняты, сервер выполняет сборку загрузки',
     'rest_response_413_too_large' => 'Файл слишком большой (максимум 10МБ)',
+
+    // Сообщения валидации SaveRecordAction
+    'module_rest_api_v3_task_title_required' => 'Не указан заголовок задачи',
 
     // Переводы публичного endpoint Status
     'rest_tag_ModuleExampleRESTAPIV3Status' => 'Модуль Example REST API v3 - Публичный статус',
