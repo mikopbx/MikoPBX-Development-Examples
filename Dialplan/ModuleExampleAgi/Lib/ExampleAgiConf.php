@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace Modules\ModuleExampleAgi\Lib;
 
+use MikoPBX\Core\Asterisk\Configs\ExtensionsConf;
 use MikoPBX\Modules\Config\ConfigClass;
 
 /**
@@ -111,5 +112,32 @@ class ExampleAgiConf extends ConfigClass
             // "Return without Gosub" and drop the call. Use Return() only if you
             // redesign this context to be invoked exclusively via Gosub().
             . "\t" . 'same => n,Hangup()' . PHP_EOL;
+    }
+
+    /**
+     * Republish the dialplan immediately after the module is enabled.
+     *
+     * WHY this matters: extensionGenContexts() only contributes to
+     * extensions.conf when the core regenerates it. Without this hook, enabling
+     * the module would NOT make [example-agi-context] appear until some unrelated
+     * event happened to trigger a reload — the module would look installed yet do
+     * nothing. ExtensionsConf::reload() rebuilds extensions.conf from every
+     * enabled module and issues `dialplan reload`, so the context goes live at
+     * once. (The Dialplan example module does exactly the same.)
+     */
+    public function onAfterModuleEnable(): void
+    {
+        ExtensionsConf::reload();
+    }
+
+    /**
+     * Drop our context from the live dialplan when the module is disabled.
+     *
+     * The regenerated extensions.conf no longer includes a disabled module's
+     * fragments, so a reload here cleanly removes [example-agi-context].
+     */
+    public function onAfterModuleDisable(): void
+    {
+        ExtensionsConf::reload();
     }
 }
