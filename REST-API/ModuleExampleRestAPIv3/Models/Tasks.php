@@ -61,8 +61,12 @@ class Tasks extends ModelsBase
      * @Primary
      * @Identity
      * @Column(type="integer", nullable=false)
+     *
+     * NOTE: The primary key MUST stay UNTYPED. A typed `int $id` is uninitialized
+     * on a new record, so Phalcon's save() throws "must not be accessed before
+     * initialization". This matches every core model in src/Common/Models.
      */
-    public int $id;
+    public $id;
 
     /**
      * Unique identifier for public API
@@ -76,7 +80,7 @@ class Tasks extends ModelsBase
      *
      * @Column(type="string", nullable=false)
      */
-    public string $uniqid;
+    public ?string $uniqid = '';
 
     /**
      * Task title
@@ -85,7 +89,7 @@ class Tasks extends ModelsBase
      *
      * @Column(type="string", nullable=false)
      */
-    public string $title;
+    public ?string $title = '';
 
     /**
      * Task status
