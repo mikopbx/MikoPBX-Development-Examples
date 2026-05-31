@@ -44,22 +44,33 @@ class DeleteRecordAction
     {
         $result = new PBXApiResult();
 
-        $id = $data['id'] ?? null;
-        if (!$id) {
+        $id = $data['id'] ?? '';
+        if ($id === '' || $id === null) {
             $result->messages['error'][] = 'Task ID is required';
             return $result;
         }
 
-        // WHY: Example - real implementation would:
-        // $task = Tasks::findByUniqid($id);
-        // if (!$task) {
-        //     $result->messages['error'][] = 'Task not found';
-        //     return $result;
-        // }
-        // $task->delete();
+        // Resolve by numeric primary key (/tasks/1) or public uniqid (/tasks/TASK-XXXX).
+        $task = ctype_digit((string)$id)
+            ? Tasks::findFirstById((int)$id)
+            : Tasks::findFirstByUniqid((string)$id);
+
+        if ($task === null) {
+            $result->messages['error'][] = 'Task not found';
+            return $result;
+        }
+
+        // WHY: Model->delete() returns false and fills getMessages() on failure
+        // (e.g. a beforeDelete validation veto). Surface those instead of lying.
+        if (!$task->delete()) {
+            foreach ($task->getMessages() as $message) {
+                $result->messages['error'][] = (string)$message;
+            }
+            return $result;
+        }
 
         $result->success = true;
-        $result->data = ['id' => $id, 'deleted' => true];
+        $result->data    = ['id' => $id, 'deleted' => true];
 
         return $result;
     }

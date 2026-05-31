@@ -44,20 +44,24 @@ class GetRecordAction
     {
         $result = new PBXApiResult();
 
-        $id = $data['id'] ?? null;
-        if (!$id) {
+        $id = $data['id'] ?? '';
+        if ($id === '' || $id === null) {
             $result->messages['error'][] = 'Task ID is required';
             return $result;
         }
 
-        // WHY: Example data - real implementation would query database
-        // $task = Tasks::findByUniqid($id);
-        $result->data = [
-            'id' => (int)$id,
-            'title' => "Example Task {$id}",
-            'status' => 'pending',
-            'priority' => 5
-        ];
+        // WHY: the path segment may be the numeric primary key (/tasks/1) or the
+        // public uniqid (/tasks/TASK-XXXX). Resolve both via Phalcon magic finders.
+        $task = ctype_digit((string)$id)
+            ? Tasks::findFirstById((int)$id)
+            : Tasks::findFirstByUniqid((string)$id);
+
+        if ($task === null) {
+            $result->messages['error'][] = 'Task not found';
+            return $result;
+        }
+
+        $result->data    = $task->toArray();
         $result->success = true;
 
         return $result;

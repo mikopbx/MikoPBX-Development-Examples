@@ -25,16 +25,11 @@ use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
 use Modules\ModuleExampleRestAPIv3\Models\Tasks;
 
 /**
- * GetListAction - Returns list of all tasks
+ * GetListAction - Returns the list of tasks from the database
  *
- * WHY: Dedicated Action class for GET /tasks collection endpoint
- * Handles retrieving and returning multiple task records
- *
- * REAL IMPLEMENTATION WOULD:
- * - Query Tasks model: $tasks = Tasks::find()
- * - Apply filtering from $data (status, priority, etc.)
- * - Implement pagination (limit, offset)
- * - Return array of task objects
+ * WHY: Dedicated Action class for the GET /tasks collection endpoint.
+ * Reads real rows from the Tasks model and demonstrates an optional,
+ * safely-bound filter plus deterministic ordering.
  *
  * @package Modules\ModuleExampleRestAPIv3\Lib\RestAPI\Tasks\Actions
  */
@@ -47,19 +42,23 @@ class GetListAction
      * Processor can call directly: GetListAction::main($data)
      *
      * @param array<string, mixed> $data Request data (query params, filters)
-     * @return PBXApiResult Response with list of tasks
+     * @return PBXApiResult Response with the list of tasks
      */
     public static function main(array $data): PBXApiResult
     {
         $result = new PBXApiResult();
-        $result->success = true;
 
-        // WHY: Example data - real implementation would query database
-        // $tasks = Tasks::find()->toArray();
-        $result->data = [
-            ['id' => 1, 'title' => 'Example Task 1', 'status' => 'pending', 'priority' => 5],
-            ['id' => 2, 'title' => 'Example Task 2', 'status' => 'in_progress', 'priority' => 8],
-        ];
+        // WHY: Build query parameters dynamically. Use bound parameters
+        // (:status:) — never string concatenation — to avoid SQL injection.
+        $parameters = ['order' => 'priority DESC, id DESC'];
+        if (!empty($data['status'])) {
+            $parameters['conditions'] = 'status = :status:';
+            $parameters['bind']       = ['status' => $data['status']];
+        }
+
+        // Tasks::find() returns a Phalcon resultset; toArray() yields plain rows.
+        $result->data    = Tasks::find($parameters)->toArray();
+        $result->success = true;
 
         return $result;
     }
