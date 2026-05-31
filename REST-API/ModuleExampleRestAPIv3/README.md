@@ -6,7 +6,7 @@
 
 ## Overview
 
-This module demonstrates **Pattern 3 (Auto-Discovery)** - the recommended approach for building REST API endpoints in MikoPBX using PHP 8.3 attributes and automatic controller discovery.
+This module demonstrates **Pattern 3 (Auto-Discovery)** - the recommended approach for building REST API endpoints in MikoPBX using PHP 8.4 attributes and automatic controller discovery.
 
 ## MikoPBX REST API Patterns
 
@@ -343,6 +343,34 @@ class GetListAction {
 - Verify file type is in allowed list (mp3, wav, pdf, png, jpeg)
 - Ensure Core's FilesAPI is properly loaded
 - Check browser console for JavaScript errors
+
+## The write-path (SaveRecordAction)
+
+`Lib/RestAPI/Tasks/Actions/SaveRecordAction.php` is the canonical, **production-grade**
+7-phase create / update / patch handler for this module. It is not a stub:
+
+- It extends `MikoPBX\PBXCoreREST\Lib\Common\AbstractSaveRecordAction` and reuses the
+  inherited helpers `createApiResult()`, `sanitizeInputData()`, `executeInTransaction()`
+  and `handleError()`.
+- It drives sanitization and validation entirely from the `DataStructure`
+  (`getSanitizationRules()`, `applyDefaults()`, `validateInputData()`), keeping the
+  schema as the Single Source of Truth.
+- It persists the real `Modules\ModuleExampleRestAPIv3\Models\Tasks` Phalcon model
+  inside `executeInTransaction()`, generating the NOT-NULL `uniqid` explicitly on
+  CREATE via `Tasks::generateUniqueID('TASK')`.
+- The response is built only from the persisted model (`id`, `uniqid`, `title`,
+  `status`, `priority`) — it never echoes fields the table does not store.
+
+Study `Core/src/PBXCoreREST/Lib/ApiKeys/SaveRecordAction.php` and
+`Core/src/PBXCoreREST/Lib/DialplanApplications/SaveRecordAction.php` as the Core
+reference implementations of the same pattern.
+
+## Further reading
+
+This module is the worked example for the developer documentation page:
+
+- `DevelopementDocs/module-developement/rest-api-in-modules.md` — the full guide to
+  the REST API auto-discovery pattern and the 7-phase Action flow.
 
 ## License
 

@@ -48,7 +48,11 @@ return [
 
     // REST API response messages
     'rest_response_201_uploaded' => 'File uploaded successfully',
+    'rest_response_202_merging' => 'Chunks accepted, server is merging the upload',
     'rest_response_413_too_large' => 'File too large (maximum 10MB allowed)',
+
+    // SaveRecordAction validation messages
+    'module_rest_api_v3_task_title_required' => 'Task title is required',
 
     // PUBLIC Status endpoint translations
     'rest_tag_ModuleExampleRESTAPIV3Status' => 'Module Example REST API v3 - Public Status',

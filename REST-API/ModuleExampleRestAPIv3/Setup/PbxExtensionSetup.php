@@ -17,6 +17,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace Modules\ModuleExampleRestAPIv3\Setup;
 
 use MikoPBX\Modules\Setup\PbxExtensionSetupBase;

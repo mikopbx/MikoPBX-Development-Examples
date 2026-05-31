@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace Modules\ModuleExampleRestAPIv3\Lib\RestAPI\Tasks\Actions;
 
 use MikoPBX\PBXCoreREST\Lib\PBXApiResult;
-use MikoPBX\PBXCoreREST\Lib\Files\UploadFileAction as FilesUploadFileAction;
 use Phalcon\Di\Injectable;
 
 /**

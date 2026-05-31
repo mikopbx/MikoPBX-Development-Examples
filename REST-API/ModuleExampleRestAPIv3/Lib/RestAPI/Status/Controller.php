@@ -90,6 +90,6 @@ class Controller extends BaseRestController
         operationId: 'getModuleStatus'
     )]
     #[ApiResponse(200, 'rest_response_200_status')]
-    #[ApiResponse(500, 'rest_response_500')]
+    #[ApiResponse(500, 'rest_response_500_error')]
     public function getStatus(): void {}
 }
