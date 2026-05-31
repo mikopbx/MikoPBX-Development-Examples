@@ -88,8 +88,23 @@ class ExampleDialplanConf extends ConfigClass
     public const string IVR_CONTEXT = 'example-dialplan-ivr';
 
     /**
+     * Tiny "entry" context that exposes the feature code inside [internal].
+     *
+     * WHY a separate context (and not just including IVR_CONTEXT into [internal]):
+     * the IVR menu uses single-digit options (1, plus the special i/t). If the IVR
+     * context itself were included into [internal], WaitExten() would run in the
+     * [internal] numbering plan, so pressing "1" would match a real extension/queue
+     * "1" instead of our menu option (directly-defined extensions beat included
+     * ones). By including only this entry context — which holds nothing but the
+     * feature code and an explicit Goto INTO the IVR context — the menu digits are
+     * resolved in [example-dialplan-ivr], isolated from the internal dial plan.
+     */
+    public const string ENTRY_CONTEXT = 'example-dialplan-entry';
+
+    /**
      * Service number, dialed from any internal phone, that enters the demo IVR.
-     * It is reachable because getIncludeInternal() pulls IVR_CONTEXT into [internal].
+     * It is reachable because getIncludeInternal() pulls ENTRY_CONTEXT into [internal];
+     * the entry then switches the channel into IVR_CONTEXT.
      */
     public const string IVR_EXTENSION = '*761';
 
@@ -156,8 +171,13 @@ class ExampleDialplanConf extends ConfigClass
         $conf .= 'exten => t,1,NoOp(ModuleExampleDialplan: input timeout)' . PHP_EOL;
         $conf .= "\t" . 'same => n,Goto(s,menu)' . PHP_EOL;
 
-        // A dialable entry point: calling the service number from a phone runs the IVR.
-        $conf .= 'exten => ' . $ext . ',1,Goto(s,1)' . PHP_EOL;
+        // Second, tiny context: the dialable entry point that lives in [internal]
+        // (via getIncludeInternal()). It does ONE thing — jump into IVR_CONTEXT with
+        // an EXPLICIT context name so the channel's context becomes example-dialplan-ivr.
+        // From that point WaitExten() resolves digits against the IVR context, so the
+        // menu option "1" hits our `exten => 1` and never the internal extension/queue 1.
+        $conf .= PHP_EOL . '[' . self::ENTRY_CONTEXT . ']' . PHP_EOL;
+        $conf .= 'exten => ' . $ext . ',1,Goto(' . self::IVR_CONTEXT . ',s,1)' . PHP_EOL;
 
         return $conf;
     }
@@ -177,16 +197,18 @@ class ExampleDialplanConf extends ConfigClass
      *   to add no include.
      *
      * HOW IT COMPOSES WITH THE CORE DIALPLAN
-     *   [internal] is the context internal phones dial within. Including our IVR context
-     *   here makes IVR_EXTENSION (*761) dialable from any internal extension: when a call
-     *   in [internal] finds no explicit match, it falls through the includes into
-     *   [example-dialplan-ivr], where our `exten => *761` matches.
+     *   [internal] is the context internal phones dial within. We include only the small
+     *   ENTRY_CONTEXT (not the IVR itself): when a call in [internal] finds no explicit
+     *   match, it falls through the include into [example-dialplan-entry], where our
+     *   `exten => *761` matches and immediately Goto's into the isolated IVR context.
+     *   Including the IVR directly would expose its single-digit menu options to the
+     *   internal numbering plan (see the ENTRY_CONTEXT docblock for why that breaks).
      *
-     * @return string `include => example-dialplan-ivr` line, or '' to skip.
+     * @return string `include => example-dialplan-entry` line, or '' to skip.
      */
     public function getIncludeInternal(): string
     {
-        return 'include => ' . self::IVR_CONTEXT . PHP_EOL;
+        return 'include => ' . self::ENTRY_CONTEXT . PHP_EOL;
     }
 
     /**
