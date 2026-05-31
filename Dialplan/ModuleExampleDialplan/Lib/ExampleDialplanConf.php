@@ -129,21 +129,28 @@ class ExampleDialplanConf extends ConfigClass
         // Give the caller time to press a digit while / after the prompt plays.
         $conf .= "\t" . 'same => n,Set(TIMEOUT(digit)=5)' . PHP_EOL;
         $conf .= "\t" . 'same => n,Set(TIMEOUT(response)=10)' . PHP_EOL;
-        // 'hello-world' and 'demo-congrats' ship with Asterisk's core sounds, so this
-        // example plays out of the box without bundling custom audio. Background() keeps
-        // listening for DTMF while the file plays; WaitExten() then waits for the digit.
-        $conf .= "\t" . 'same => n(menu),Background(hello-world)' . PHP_EOL;
+        // vm-intro / vm-goodbye / invalid are core MikoPBX prompts shipped in EVERY
+        // installed locale, so this example plays out of the box without bundling
+        // custom audio. (Asterisk's classic demo sounds such as 'hello-world' /
+        // 'demo-congrats' are NOT present in MikoPBX's default locales — using them
+        // logs "File ... does not exist in any format" and plays silence.) A module
+        // that needs bespoke audio ships its own files and installs them into the
+        // sounds directory. Background() keeps listening for DTMF while the file
+        // plays; WaitExten() then waits for the digit.
+        $conf .= "\t" . 'same => n(menu),Background(vm-intro)' . PHP_EOL;
         $conf .= "\t" . 'same => n,WaitExten()' . PHP_EOL;
 
         // Digit 1: a simple announcement, then hang up.
         $conf .= 'exten => 1,1,NoOp(ModuleExampleDialplan: caller chose announcement)' . PHP_EOL;
-        $conf .= "\t" . 'same => n,Playback(demo-congrats)' . PHP_EOL;
+        $conf .= "\t" . 'same => n,Playback(vm-goodbye)' . PHP_EOL;
         $conf .= "\t" . 'same => n,Hangup()' . PHP_EOL;
 
         // 'i' (invalid) and 't' (timeout) are special extensions Asterisk jumps to when
-        // the caller presses an unmapped key or does not respond in time. Looping back to
-        // the (menu) label keeps the example self-contained and avoids a dead end.
+        // the caller presses an unmapped key or does not respond in time. Play a short
+        // "invalid" prompt then loop back to the (menu) label so the example stays
+        // self-contained and never dead-ends.
         $conf .= 'exten => i,1,NoOp(ModuleExampleDialplan: invalid entry)' . PHP_EOL;
+        $conf .= "\t" . 'same => n,Playback(invalid)' . PHP_EOL;
         $conf .= "\t" . 'same => n,Goto(s,menu)' . PHP_EOL;
 
         $conf .= 'exten => t,1,NoOp(ModuleExampleDialplan: input timeout)' . PHP_EOL;
