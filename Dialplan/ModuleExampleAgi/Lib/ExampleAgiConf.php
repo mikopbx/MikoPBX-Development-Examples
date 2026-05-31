@@ -67,25 +67,22 @@ class ExampleAgiConf extends ConfigClass
      *   "Custom Contexts" section.
      *
      * What the context does:
-     *   For ANY dialed number (`_X.` matches one-or-more digits) it hands the
-     *   call to our PHP-AGI script via the AGI() application. The AGI script
-     *   runs in the same process space as Asterisk's AGI subsystem, can read
-     *   and write channel variables, and returns control to the dialplan when
-     *   it finishes. After the script returns we simply NoOp the result so the
-     *   outcome is visible in the Asterisk console / CLI log.
+     *   It defines a single dialable feature code, `*762`, that hands the call to
+     *   our PHP-AGI script via the AGI() application. The AGI script runs in the
+     *   same process space as Asterisk's AGI subsystem, can read and write channel
+     *   variables, and returns control to the dialplan when it finishes. After the
+     *   script returns we NoOp the result so the outcome is visible in the
+     *   Asterisk console / CLI log.
      *
-     * IMPORTANT — how a learner actually reaches this context:
-     *   A freshly published context is NOT wired into call flow automatically.
-     *   Nothing routes to it until you connect it. Typical ways to do so:
-     *     - From an incoming route hook, e.g. override
-     *       generateIncomingRoutBeforeDial() and emit
-     *       `same => n,Goto(example-agi-context,${EXTEN},1)`.
-     *     - From another context with a `Goto()` / `Gosub()` to this context.
-     *     - By `include => example-agi-context` inside an existing context.
-     *     - For a quick manual test from the Asterisk CLI:
-     *         asterisk -rx "channel originate Local/12345@example-agi-context application Wait 1"
-     *   We keep the context standalone on purpose: it isolates the AGI demo so a
-     *   reader can study the AGI() invocation without untangling routing logic.
+     * How a learner reaches this context:
+     *   getIncludeInternal() (below) adds `include => example-agi-context` to the
+     *   core `[internal]` context, so any registered extension can simply DIAL
+     *   `*762` to run the AGI demo. We expose exactly one feature code — never a
+     *   catch-all pattern like `_X.` — precisely because the context is included
+     *   into `[internal]`: a catch-all there would swallow every internal call.
+     *   Other ways to enter a published context (no include needed) are a
+     *   `Goto()`/`Gosub()` from your own dialplan, or an incoming-route hook
+     *   (override generateIncomingRoutBeforeDial()).
      *
      * Note on the AGI path:
      *   `$this->moduleDir` is provided by ConfigClass and resolves to this
@@ -101,8 +98,10 @@ class ExampleAgiConf extends ConfigClass
 
         // Build the context. The leading tab on continuation lines ("\t") is the
         // style MikoPBX uses for `same =>` priorities in generated dialplan.
+        // The single extension is the feature code *762 (safe to include into
+        // [internal]); $CALLERID(num) is the real number of the phone that dialed.
         return '[' . self::CONTEXT_NAME . ']' . PHP_EOL
-            . 'exten => _X.,1,NoOp(ModuleExampleAgi: entering AGI demo for ${CALLERID(num)})' . PHP_EOL
+            . 'exten => *762,1,NoOp(ModuleExampleAgi: entering AGI demo for ${CALLERID(num)})' . PHP_EOL
             . "\t" . 'same => n,AGI(' . $agiScript . ')' . PHP_EOL
             . "\t" . 'same => n,NoOp(ModuleExampleAgi: AGI returned department=${EXAMPLE_AGI_DEPARTMENT})' . PHP_EOL
             // We terminate with Hangup() so the context is safe to enter as a
@@ -112,6 +111,25 @@ class ExampleAgiConf extends ConfigClass
             // "Return without Gosub" and drop the call. Use Return() only if you
             // redesign this context to be invoked exclusively via Gosub().
             . "\t" . 'same => n,Hangup()' . PHP_EOL;
+    }
+
+    /**
+     * Wire the feature code into the core [internal] context.
+     *
+     * WHY: extensionGenContexts() publishes [example-agi-context] as a standalone
+     * block, but nothing routes to it until it is included somewhere reachable.
+     * getIncludeInternal() is invoked while the core builds the [internal] context
+     * (the one every registered extension dials from); whatever string we return
+     * is appended as raw `include =>` lines. One include makes *762 dialable.
+     *
+     * Returning a catch-all context here would be dangerous (it would swallow
+     * every internal call), which is why example-agi-context exposes only *762.
+     *
+     * @return string An `include => example-agi-context` line for [internal].
+     */
+    public function getIncludeInternal(): string
+    {
+        return 'include => ' . self::CONTEXT_NAME . PHP_EOL;
     }
 
     /**
