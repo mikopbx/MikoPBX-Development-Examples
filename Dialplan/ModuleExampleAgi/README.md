@@ -52,8 +52,13 @@ it until you connect it. Common approaches:
 - Quick manual test from the Asterisk CLI:
 
   ```bash
-  asterisk -rx 'channel originate Local/12345@example-agi-context application Wait 1'
+  # res_clioriginate is not loaded by default on MikoPBX
+  asterisk -rx 'module load res_clioriginate.so'
+  asterisk -rx 'channel originate Local/*762@example-agi-context application Wait 2'
   ```
+
+  The verbose log then shows the AGI script launching and
+  `AGI returned department=Unknown` (a Local channel carries no CallerID).
 
 The context is kept standalone on purpose so the AGI() invocation can be studied
 in isolation.
