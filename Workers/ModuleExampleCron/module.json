@@ -1,0 +1,7 @@
+{
+  "developer": "MIKO",
+  "moduleUniqueID": "ModuleExampleCron",
+  "support_email": "help@miko.ru",
+  "version": "%ModuleVersion%",
+  "min_pbx_version": "2025.1.1"
+}
